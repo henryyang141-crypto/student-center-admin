@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Center 校历</title>
+<style>
+  :root { --bg:#f2f2f7; --card:#fff; --ink:#1c1c1e; --muted:#6e6e73; --accent:#0a84ff; --danger:#ff3b30; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#000; --card:#1c1c1e; --ink:#f2f2f7; --muted:#98989d; } }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 28px 16px 60px; }
+  h1 { font-size: 28px; margin: 0 0 4px; } h2 { font-size: 18px; margin: 28px 0 8px; }
+  .sub { color: var(--muted); margin: 0; }
+  .card { background: var(--card); border-radius: 14px; padding: 14px 16px; margin: 10px 0; }
+  .card small { color: var(--muted); display:block; }
+  .urgent { border-left: 4px solid var(--danger); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Student Center 校历</h1>
+  <p class="sub" id="updated">正在读取…</p>
+  <h2>通知</h2><div id="a"></div>
+  <h2>特殊课表日</h2><div id="d"></div>
+  <h2>临时停课</h2><div id="c"></div>
+</main>
+<script>
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
+fetch("calendar.json?t=" + Date.now()).then(r => r.json()).then(f => {
+  document.getElementById("updated").textContent = "更新于 " + new Date(f.updated).toLocaleString("zh-CN");
+  const a = (f.announcements || []).filter(x => !x.expires || x.expires >= today);
+  document.getElementById("a").innerHTML = a.map(x => '<div class="card ' + (x.level === "urgent" ? "urgent" : "") + '"><b>' + esc(x.titleZh || x.title) + "</b><small>" + esc(x.title) + "</small><p>" + esc(x.bodyZh || x.body) + "</p>" + (x.link && /^https:/.test(x.link) ? '<a href="' + esc(x.link) + '">详情</a>' : "") + "</div>").join("") || '<p class="sub">暂无</p>';
+  const d = (f.specialDays || []).filter(x => x.date >= today);
+  document.getElementById("d").innerHTML = d.map(x => '<div class="card"><b>' + esc(x.date) + " · " + esc(x.titleZh || x.title) + "</b><small>" + esc(x.occasionZh || x.occasion) + "</small><small>" + x.bells.map(b => "P" + b.period + " " + b.start + "–" + b.end).join(" · ") + "</small></div>").join("") || '<p class="sub">暂无</p>';
+  const c = (f.closures || []).filter(x => (x.end || x.start) >= today);
+  document.getElementById("c").innerHTML = c.map(x => '<div class="card"><b>' + esc(x.start) + (x.end && x.end !== x.start ? " – " + esc(x.end) : "") + " · " + esc(x.titleZh || x.title) + "</b></div>").join("") || '<p class="sub">暂无</p>';
+}).catch(() => document.getElementById("updated").textContent = "读取失败");
+</script>
+</body>
+</html>

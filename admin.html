@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Student Center 控制台</title>
+<style>
+  :root { --bg:#f2f2f7; --card:#fff; --ink:#1c1c1e; --muted:#6e6e73; --line:#d1d1d6; --accent:#0a84ff; --danger:#ff3b30; --ok:#34c759; --warn:#ff9500; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#000; --card:#1c1c1e; --ink:#f2f2f7; --muted:#98989d; --line:#38383a; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 80px; }
+  h1 { font-size: 28px; margin: 8px 0 4px; }
+  h2 { font-size: 20px; margin: 0 0 12px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  section { background: var(--card); border-radius: 16px; padding: 18px; margin: 16px 0; }
+  label { display:block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  input, textarea, select { width:100%; font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; }
+  textarea { min-height: 70px; resize: vertical; }
+  .row { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .row, .row3 { grid-template-columns: 1fr; } }
+  button { font: inherit; border: 0; border-radius: 10px; padding: 10px 16px; cursor: pointer; background: var(--accent); color: #fff; font-weight: 600; }
+  button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); font-weight: 500; }
+  button.danger { background: transparent; color: var(--danger); border: 1px solid var(--line); font-weight: 500; padding: 6px 12px; }
+  button:disabled { opacity: .5; cursor: default; }
+  .actions { display:flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
+  .item { border-top: 1px solid var(--line); padding: 12px 0; display:flex; gap: 12px; justify-content: space-between; align-items: flex-start; }
+  .item:first-of-type { border-top: 0; }
+  .item small { color: var(--muted); display:block; }
+  .tag { display:inline-block; font-size: 12px; padding: 2px 8px; border-radius: 20px; background: rgba(10,132,255,.12); color: var(--accent); margin-right: 6px; }
+  .tag.urgent { background: rgba(255,59,48,.12); color: var(--danger); }
+  .status { padding: 10px 12px; border-radius: 10px; margin-top: 12px; display:none; }
+  .status.show { display:block; }
+  .status.ok { background: rgba(52,199,89,.12); color: var(--ok); }
+  .status.err { background: rgba(255,59,48,.12); color: var(--danger); }
+  .status.info { background: rgba(10,132,255,.10); color: var(--accent); }
+  table { width:100%; border-collapse: collapse; }
+  td { padding: 4px; }
+  td input { padding: 6px 8px; }
+  .check { display:flex; gap: 8px; align-items:center; margin-top: 10px; }
+  .check input { width:auto; }
+  .pending { color: var(--warn); font-weight: 600; }
+  details summary { cursor: pointer; color: var(--muted); }
+  pre { white-space: pre-wrap; word-break: break-all; font-size: 12px; background: var(--bg); padding: 10px; border-radius: 10px; max-height: 320px; overflow:auto; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Student Center 控制台</h1>
+  <p class="sub">修改后点“发布”，所有 Student Center App（原版、梁钧淘版、正式版）会读取更新：打开 App 时几秒内生效，后台由 iOS 决定，通常几分钟到一小时。</p>
+
+  <section id="connect">
+    <h2>1 · 连接 GitHub</h2>
+    <div class="row">
+      <div><label>仓库（owner/repo）</label><input id="repo" placeholder="your-name/student-center-admin"></div>
+      <div><label>访问令牌（只存在这台电脑的浏览器里）</label><input id="token" type="password" placeholder="github_pat_…"></div>
+    </div>
+    <div class="actions">
+      <button id="load">连接并读取</button>
+      <button class="ghost" id="forget">忘记令牌</button>
+      <span id="dirty" class="pending" hidden>有未发布的修改</span>
+    </div>
+    <div id="status" class="status"></div>
+  </section>
+
+  <section id="ai">
+    <h2>✨ AI 助手：说一句话，自动填好</h2>
+    <p class="sub" style="margin:0 0 6px">例如：“明天因为暴风雪改远程，第一节取消，9 点开始每节 30 分钟”，或者直接上传学校发的通知截图 / PDF。AI 会生成草稿，你确认后再发布。</p>
+    <textarea id="aiPrompt" placeholder="用中文或英文描述你要做的事…"></textarea>
+    <div class="row">
+      <div><label>附件（可选：截图、PDF、文本）</label><input id="aiFiles" type="file" multiple accept="image/*,application/pdf,text/plain,.txt,.md"></div>
+      <div><label>Anthropic API Key（只存在这台电脑的浏览器里）</label><input id="aiKey" type="password" placeholder="sk-ant-…"></div>
+    </div>
+    <div class="actions"><button id="aiRun">让 AI 理解并填写</button><span id="aiBusy" class="sub" hidden>思考中…</span></div>
+    <div id="aiStatus" class="status"></div>
+    <div id="aiResult" hidden>
+      <pre id="aiPreview"></pre>
+      <div class="actions"><button id="aiApply">加入草稿</button><button class="ghost" id="aiDiscard">不要</button></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2 · 发送通知 / 公告</h2>
+    <div class="row">
+      <div><label>标题（中文）</label><input id="aTitleZh" placeholder="明天因天气改为远程上课"></div>
+      <div><label>Title (English)</label><input id="aTitle" placeholder="Remote day tomorrow due to weather"></div>
+    </div>
+    <div class="row">
+      <div><label>内容（中文）</label><textarea id="aBodyZh"></textarea></div>
+      <div><label>Message (English)</label><textarea id="aBody"></textarea></div>
+    </div>
+    <div class="row3">
+      <div><label>级别</label><select id="aLevel"><option value="info">普通</option><option value="urgent">紧急（醒目显示）</option></select></div>
+      <div><label>显示到（含当天，可留空）</label><input id="aExpires" type="date"></div>
+      <div><label>链接（可选）</label><input id="aLink" type="url" placeholder="https://"></div>
+    </div>
+    <div class="actions"><button id="addAnnouncement">添加通知</button></div>
+    <div id="announcements"></div>
+  </section>
+
+  <section>
+    <h2>3 · 特殊课表日（远程 / 延迟开学 / 提前放学）</h2>
+    <div class="row3">
+      <div><label>日期</label><input id="dDate" type="date"></div>
+      <div><label>模板</label>
+        <select id="dPreset">
+          <option value="remote">远程教学日（30 分钟课）</option>
+          <option value="delay">延迟 2 小时开学</option>
+          <option value="early">提前放学（每节 30 分钟）</option>
+          <option value="custom">自定义</option>
+        </select>
+      </div>
+      <div><label>取消的节次（逗号分隔，可留空）</label><input id="dCanceled" placeholder="1"></div>
+    </div>
+    <div class="row">
+      <div><label>名称（中文）</label><input id="dTitleZh" value="远程教学日"></div>
+      <div><label>Name (English)</label><input id="dTitle" value="Remote Instruction Day"></div>
+    </div>
+    <div class="row">
+      <div><label>原因（中文）</label><input id="dOccasionZh" placeholder="恶劣天气"></div>
+      <div><label>Reason (English)</label><input id="dOccasion" placeholder="Severe weather"></div>
+    </div>
+    <div class="row">
+      <div><label>说明（中文）</label><textarea id="dNoteZh"></textarea></div>
+      <div><label>Note (English)</label><textarea id="dNote"></textarea></div>
+    </div>
+    <label>铃声时间（每节的新时间；没列出的节次当天没有课）</label>
+    <table><tbody id="bells"></tbody></table>
+    <div class="check"><input type="checkbox" id="dRemote" checked><span>线上上课（App 会显示“远程上课”，不显示洗手间时间）</span></div>
+    <div class="check"><input type="checkbox" id="dNotify" checked><span>同时给所有人发通知</span></div>
+    <div class="actions"><button class="ghost" id="addBell">加一节</button><button id="addDay">添加这一天</button></div>
+    <div id="days"></div>
+  </section>
+
+  <section>
+    <h2>4 · 临时停课（雪天等）</h2>
+    <div class="row">
+      <div><label>开始</label><input id="cStart" type="date"></div>
+      <div><label>结束（含）</label><input id="cEnd" type="date"></div>
+    </div>
+    <div class="row">
+      <div><label>名称（中文）</label><input id="cTitleZh" placeholder="雪天停课"></div>
+      <div><label>Name (English)</label><input id="cTitle" placeholder="Snow Day"></div>
+    </div>
+    <div class="check"><input type="checkbox" id="cNotify" checked><span>同时给所有人发通知</span></div>
+    <div class="actions"><button id="addClosure">添加停课</button></div>
+    <div id="closures"></div>
+  </section>
+
+  <section>
+    <h2>5 · 发布</h2>
+    <p class="sub" style="margin:0">发布会把上面的内容保存到 GitHub。App 在下次检查时读取（打开 App 时立即检查）。</p>
+    <div class="actions"><button id="publish" disabled>发布到所有 App</button></div>
+    <div id="pubStatus" class="status"></div>
+    <details style="margin-top:12px"><summary>查看将要发布的 calendar.json</summary><pre id="preview"></pre></details>
+  </section>
+</main>
+
+<script>
+const PRESETS = {
+  remote: { start: "09:00", length: 30, gap: 5, from: 2, to: 11, canceled: "1", remote: true, titleZh: "远程教学日", title: "Remote Instruction Day" },
+  delay:  { start: "10:00", length: 35, gap: 3, from: 2, to: 9,  canceled: "1", remote: false, titleZh: "延迟开学", title: "Delayed Opening" },
+  early:  { start: "08:00", length: 30, gap: 3, from: 2, to: 9,  canceled: "",  remote: false, titleZh: "提前放学", title: "Early Dismissal" }
+};
+let feed = null, sha = null, dirty = false;
+const $ = id => document.getElementById(id);
+const store = { get: k => { try { return localStorage.getItem(k) } catch { return null } }, set: (k, v) => { try { localStorage.setItem(k, v) } catch {} }, del: k => { try { localStorage.removeItem(k) } catch {} } };
+
+function say(el, text, kind) { el.textContent = text; el.className = "status show " + kind; }
+function markDirty() { dirty = true; $("dirty").hidden = false; $("publish").disabled = !feed; render(); }
+function minutes(t) { const [h, m] = t.split(":").map(Number); return h * 60 + m; }
+function hhmm(n) { return String(Math.floor(n / 60)).padStart(2, "0") + ":" + String(n % 60).padStart(2, "0"); }
+function today() { return new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" }); }
+function nowISO() { const d = new Date(); const off = -d.getTimezoneOffset(); const s = off >= 0 ? "+" : "-"; const p = n => String(Math.floor(Math.abs(n))).padStart(2, "0"); return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "T" + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds()) + s + p(off / 60) + ":" + p(off % 60); }
+function esc(s) { return String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+// ---- GitHub
+async function gh(path, init = {}) {
+  const res = await fetch("https://api.github.com/repos/" + $("repo").value.trim() + path, {
+    ...init, headers: { "Authorization": "Bearer " + $("token").value.trim(), "Accept": "application/vnd.github+json", ...(init.headers || {}) }
+  });
+  if (!res.ok) throw new Error(res.status + " " + (await res.text()).slice(0, 200));
+  return res.json();
+}
+function decode(b64) { return new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\n/g, "")), c => c.charCodeAt(0))); }
+function encode(text) { let s = ""; new TextEncoder().encode(text).forEach(b => s += String.fromCharCode(b)); return btoa(s); }
+
+$("load").onclick = async () => {
+  store.set("scRepo", $("repo").value.trim()); store.set("scToken", $("token").value.trim());
+  try {
+    const file = await gh("/contents/calendar.json?ref=main");
+    sha = file.sha; feed = JSON.parse(decode(file.content));
+    feed.specialDays ||= []; feed.closures ||= []; feed.announcements ||= [];
+    dirty = false; $("dirty").hidden = true; $("publish").disabled = false;
+    say($("status"), "已连接，读取到 " + feed.announcements.length + " 条通知、" + feed.specialDays.length + " 个特殊日、" + feed.closures.length + " 个停课。", "ok");
+    render();
+  } catch (e) { say($("status"), "连接失败：" + e.message, "err"); }
+};
+$("forget").onclick = () => { store.del("scToken"); $("token").value = ""; say($("status"), "已从这个浏览器删除令牌。", "info"); };
+
+// ---- Announcements
+function addAnnouncement(a) { feed.announcements.unshift({ id: (a.date || nowISO()).slice(0, 10) + "-" + Math.random().toString(36).slice(2, 8), date: nowISO(), level: "info", ...a }); }
+$("addAnnouncement").onclick = () => {
+  if (!feed) return say($("status"), "请先连接。", "err");
+  const a = { title: $("aTitle").value.trim(), titleZh: $("aTitleZh").value.trim(), body: $("aBody").value.trim(), bodyZh: $("aBodyZh").value.trim(), level: $("aLevel").value };
+  if (!a.title && !a.titleZh) return alert("请至少填写一个标题");
+  if ($("aExpires").value) a.expires = $("aExpires").value;
+  if ($("aLink").value.trim()) a.link = $("aLink").value.trim();
+  addAnnouncement(a);
+  ["aTitle", "aTitleZh", "aBody", "aBodyZh", "aExpires", "aLink"].forEach(id => $(id).value = "");
+  markDirty();
+};
+
+// ---- Special days
+function bellRow(b = { period: "", start: "", end: "" }) {
+  const tr = document.createElement("tr");
+  tr.innerHTML = '<td style="width:22%"><input type="number" min="1" max="12" placeholder="节" value="' + b.period + '"></td><td><input type="time" value="' + b.start + '"></td><td><input type="time" value="' + b.end + '"></td><td style="width:1%"><button class="danger" type="button">删</button></td>';
+  tr.querySelector("button").onclick = () => tr.remove();
+  $("bells").appendChild(tr);
+}
+function applyPreset() {
+  const p = PRESETS[$("dPreset").value];
+  if (!p) return;
+  $("bells").innerHTML = "";
+  let t = minutes(p.start);
+  for (let n = p.from; n <= p.to; n++) { bellRow({ period: n, start: hhmm(t), end: hhmm(t + p.length) }); t += p.length + p.gap; }
+  $("dCanceled").value = p.canceled; $("dRemote").checked = p.remote; $("dTitleZh").value = p.titleZh; $("dTitle").value = p.title;
+}
+$("dPreset").onchange = applyPreset;
+$("addBell").onclick = () => bellRow();
+function upsertDay(day, notify) {
+  const bells = day.bells, date = day.date;
+  feed.specialDays = feed.specialDays.filter(d => d.date !== date); feed.specialDays.push(day); feed.specialDays.sort((a, b) => a.date.localeCompare(b.date));
+  if (!notify) return;
+  const when = new Date(date + "T12:00:00").toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "short" });
+  const whenEn = new Date(date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", weekday: "short" });
+  addAnnouncement({ level: "urgent", expires: date, specialDay: date,
+    titleZh: when + " " + day.titleZh + (day.occasionZh ? "（" + day.occasionZh + "）" : ""),
+    title: whenEn + ": " + day.title + (day.occasion ? " (" + day.occasion + ")" : ""),
+    bodyZh: (day.remote ? "全天远程上课。" : "当天使用特殊铃声时间。") + (day.canceled.length ? "第 " + day.canceled.join("、") + " 节取消。" : "") + "第一节 " + bells[0].start + " 开始。打开 App 查看你的课表。" + (day.noteZh ? " " + day.noteZh : ""),
+    body: (day.remote ? "Classes meet online. " : "Special bell schedule. ") + (day.canceled.length ? "Period " + day.canceled.join(", ") + " canceled. " : "") + "First class at " + bells[0].start + ". Open the app for your schedule." + (day.note ? " " + day.note : "") });
+}
+function addClosure(c, notify) {
+  feed.closures.push(c); feed.closures.sort((a, b) => a.start.localeCompare(b.start));
+  if (notify) addAnnouncement({ level: "urgent", expires: c.end, titleZh: c.titleZh + (c.start === c.end ? "：" + c.start : "：" + c.start + " 至 " + c.end), title: c.title + (c.start === c.end ? ": " + c.start : ": " + c.start + " – " + c.end), bodyZh: "学校这" + (c.start === c.end ? "天" : "几天") + "停课，App 中的课表和提醒会自动暂停。", body: "School is closed. Your schedule and class reminders pause automatically." });
+}
+$("addDay").onclick = () => {
+  if (!feed) return say($("status"), "请先连接。", "err");
+  const date = $("dDate").value;
+  if (!date) return alert("请选择日期");
+  const bells = [...$("bells").querySelectorAll("tr")].map(tr => { const i = tr.querySelectorAll("input"); return { period: Number(i[0].value), start: i[1].value, end: i[2].value }; })
+    .filter(b => b.period && b.start && b.end).sort((a, b) => a.period - b.period);
+  if (!bells.length) return alert("请至少填写一节课的时间");
+  if (bells.some(b => b.start >= b.end)) return alert("每节的开始时间要早于结束时间");
+  const day = { date, title: $("dTitle").value.trim(), titleZh: $("dTitleZh").value.trim(), occasion: $("dOccasion").value.trim(), occasionZh: $("dOccasionZh").value.trim(),
+    remote: $("dRemote").checked, canceled: $("dCanceled").value.split(/[,，\s]+/).map(Number).filter(Boolean), bells, note: $("dNote").value.trim(), noteZh: $("dNoteZh").value.trim() };
+  upsertDay(day, $("dNotify").checked);
+  markDirty();
+};
+
+// ---- Closures
+$("addClosure").onclick = () => {
+  if (!feed) return say($("status"), "请先连接。", "err");
+  const c = { start: $("cStart").value, end: $("cEnd").value || $("cStart").value, title: $("cTitle").value.trim() || "School Closed", titleZh: $("cTitleZh").value.trim() || "停课" };
+  if (!c.start) return alert("请选择开始日期");
+  if (c.end < c.start) return alert("结束日期不能早于开始日期");
+  addClosure(c, $("cNotify").checked);
+  markDirty();
+};
+
+// ---- Render
+function render() {
+  if (!feed) return;
+  const t = today();
+  $("announcements").innerHTML = feed.announcements.map((a, i) => '<div class="item"><div><span class="tag ' + (a.level === "urgent" ? "urgent" : "") + '">' + (a.level === "urgent" ? "紧急" : "通知") + "</span><b>" + esc(a.titleZh || a.title) + "</b><small>" + esc(a.bodyZh || a.body) + "</small><small>" + esc(a.date) + (a.expires ? " · 显示到 " + esc(a.expires) : "") + (a.expires && a.expires < t ? " · 已过期" : "") + '</small></div><button class="danger" data-a="' + i + '">删除</button></div>').join("") || '<p class="sub">暂无通知</p>';
+  $("days").innerHTML = feed.specialDays.map((d, i) => '<div class="item"><div><b>' + esc(d.date) + " · " + esc(d.titleZh) + "</b><small>" + d.bells.map(b => "P" + b.period + " " + b.start + "–" + b.end).join("  ") + (d.canceled?.length ? " · 取消 P" + d.canceled.join(", P") : "") + (d.date < t ? " · 已过" : "") + '</small></div><button class="danger" data-d="' + i + '">删除</button></div>').join("") || '<p class="sub">暂无特殊日</p>';
+  $("closures").innerHTML = feed.closures.map((c, i) => '<div class="item"><div><b>' + esc(c.start) + (c.end !== c.start ? " – " + esc(c.end) : "") + " · " + esc(c.titleZh) + '</b></div><button class="danger" data-c="' + i + '">删除</button></div>').join("") || '<p class="sub">暂无临时停课</p>';
+  document.querySelectorAll("[data-a]").forEach(b => b.onclick = () => { feed.announcements.splice(+b.dataset.a, 1); markDirty(); });
+  document.querySelectorAll("[data-d]").forEach(b => b.onclick = () => { feed.specialDays.splice(+b.dataset.d, 1); markDirty(); });
+  document.querySelectorAll("[data-c]").forEach(b => b.onclick = () => { feed.closures.splice(+b.dataset.c, 1); markDirty(); });
+  $("preview").textContent = JSON.stringify(feed, null, 2);
+}
+
+// ---- Publish
+$("publish").onclick = async () => {
+  if (!feed) return;
+  feed.updated = nowISO();
+  $("publish").disabled = true;
+  try {
+    const body = JSON.stringify(feed, null, 2) + "\n";
+    const res = await gh("/contents/calendar.json", { method: "PUT", body: JSON.stringify({ message: "Update calendar from console", content: encode(body), sha, branch: "main" }) });
+    sha = res.content.sha; dirty = false; $("dirty").hidden = true;
+    say($("pubStatus"), "已发布 ✓ 打开 App 即可收到；后台更新由 iOS 安排。", "ok");
+  } catch (e) {
+    say($("pubStatus"), "发布失败：" + e.message + (String(e.message).startsWith("409") ? "（别处有新的修改，请重新“连接并读取”后再改）" : ""), "err");
+  } finally { $("publish").disabled = !feed; render(); }
+};
+
+
+// ---- AI assistant (Claude). Turns a sentence or a school notice into draft changes; nothing is published until you press Publish.
+const AI_SCHEMA = {
+  type: "object", additionalProperties: false,
+  required: ["summary", "announcements", "specialDays", "closures", "removeAnnouncements", "removeSpecialDays", "removeClosures"],
+  properties: {
+    summary: { type: "string" },
+    announcements: { type: "array", items: { type: "object", additionalProperties: false,
+      required: ["title", "titleZh", "body", "bodyZh", "level", "expires", "link"],
+      properties: { title: { type: "string" }, titleZh: { type: "string" }, body: { type: "string" }, bodyZh: { type: "string" },
+        level: { type: "string", enum: ["info", "urgent"] }, expires: { type: "string" }, link: { type: "string" } } } },
+    specialDays: { type: "array", items: { type: "object", additionalProperties: false,
+      required: ["date", "title", "titleZh", "occasion", "occasionZh", "remote", "canceled", "bells", "note", "noteZh", "notify"],
+      properties: { date: { type: "string" }, title: { type: "string" }, titleZh: { type: "string" }, occasion: { type: "string" }, occasionZh: { type: "string" },
+        remote: { type: "boolean" }, canceled: { type: "array", items: { type: "integer" } }, note: { type: "string" }, noteZh: { type: "string" }, notify: { type: "boolean" },
+        bells: { type: "array", items: { type: "object", additionalProperties: false, required: ["period", "start", "end"],
+          properties: { period: { type: "integer" }, start: { type: "string" }, end: { type: "string" } } } } } } },
+    closures: { type: "array", items: { type: "object", additionalProperties: false, required: ["start", "end", "title", "titleZh", "notify"],
+      properties: { start: { type: "string" }, end: { type: "string" }, title: { type: "string" }, titleZh: { type: "string" }, notify: { type: "boolean" } } } },
+    removeAnnouncements: { type: "array", items: { type: "string" } },
+    removeSpecialDays: { type: "array", items: { type: "string" } },
+    removeClosures: { type: "array", items: { type: "string" } }
+  }
+};
+const AI_SYSTEM = `You fill in the admin console of "Student Center", an iPhone app for students at Bayside High School (NYC public school, America/New_York time zone). The administrator describes a change in Chinese or English, sometimes with a screenshot or PDF of a school notice. Return only the changes they asked for.
+
+What each part does in the app:
+- specialDays: a school day on a different bell schedule (remote day, delayed opening, early dismissal, half day). Every student keeps their own class for each period; only the period times change. List a bell for every period that meets that day, with 24-hour "HH:MM" times. Periods not listed have no class that day; also put explicitly canceled periods in "canceled". remote=true when classes meet online.
+- closures: days with no school at all (snow day, emergency closure). start/end are YYYY-MM-DD, end inclusive (same as start for one day).
+- announcements: a message every student gets as a phone notification and a card on the Home screen. level "urgent" only for time-critical news. expires = last YYYY-MM-DD it should show ("" if none). link = an https URL from the notice, or "".
+- notify=true on a special day or closure automatically sends everyone a detailed notification about it, so don't also write a separate announcement for the same thing unless the admin asks for extra details that the automatic text would lack (put those in note/noteZh instead).
+- remove*: when the admin asks to cancel or delete something already published. Use announcement ids, special-day dates, or closure start dates from the current calendar.
+
+Reference schedules:
+- Remote Instruction Day used on 2026-11-03: period 1 canceled; periods 2-11 at 09:00-09:30, 09:35-10:05, 10:10-10:40, 10:45-11:15, 11:20-11:50, 11:55-12:25, 12:30-13:00, 13:05-13:35, 13:40-14:10, 14:15-14:45. When the admin says "remote day" without times, use this.
+- If they give only a start time and a class length, build consecutive periods with a 5-minute gap.
+
+Write every user-facing text in both English (title, body, occasion, note) and Simplified Chinese (titleZh, bodyZh, occasionZh, noteZh): short, clear, and friendly to high-school students. Resolve relative dates ("tomorrow", "this Friday", "下周一") against today's date. Never invent facts the admin didn't give; if something essential is missing (e.g. which day), make no change and explain in summary. summary: one or two sentences in Chinese describing what you prepared.`;
+let aiDraft = null;
+
+async function fileBlock(file) {
+  const b64 = await new Promise((ok, fail) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = fail; r.readAsDataURL(file); });
+  if (file.type.startsWith("image/")) return { type: "image", source: { type: "base64", media_type: file.type, data: b64 } };
+  if (file.type === "application/pdf") return { type: "document", source: { type: "base64", media_type: "application/pdf", data: b64 } };
+  return { type: "text", text: "Attached file " + file.name + ":\n" + (await file.text()) };
+}
+
+$("aiRun").onclick = async () => {
+  if (!feed) return say($("aiStatus"), "请先在第 1 步连接 GitHub。", "err");
+  const key = $("aiKey").value.trim(), prompt = $("aiPrompt").value.trim(), files = [...$("aiFiles").files];
+  if (!key) return say($("aiStatus"), "请填写 Anthropic API Key。", "err");
+  if (!prompt && !files.length) return say($("aiStatus"), "请描述要做的事或上传通知。", "err");
+  store.set("scAIKey", key);
+  $("aiRun").disabled = true; $("aiBusy").hidden = false; $("aiResult").hidden = true; $("aiStatus").className = "status";
+  try {
+    const now = new Date();
+    const content = [...await Promise.all(files.map(fileBlock)), { type: "text", text:
+      "Today is " + now.toLocaleDateString("en-US", { timeZone: "America/New_York", weekday: "long", year: "numeric", month: "long", day: "numeric" }) + " (" + today() + ").\n\n" +
+      "Current calendar:\n" + JSON.stringify({ specialDays: feed.specialDays, closures: feed.closures, announcements: feed.announcements.map(a => ({ id: a.id, title: a.title, titleZh: a.titleZh, expires: a.expires })) }) +
+      "\n\nAdmin request:\n" + (prompt || "Read the attached notice and prepare the matching changes.") }];
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2026-10-21",
+        "anthropic-beta": "server-side-fallback-2026-07-01", "anthropic-dangerous-direct-browser-access": "true" },
+      body: JSON.stringify({ model: "claude-opus-5-5", max_tokens: 16000, fallbacks: "default", system: AI_SYSTEM,
+        output_config: { effort: "medium", format: { type: "json_schema", schema: AI_SCHEMA } },
+        messages: [{ role: "user", content }] })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error((data.error && data.error.message) || res.status);
+    if (data.stop_reason === "refusal") throw new Error("AI 拒绝了这个请求，请换个说法。");
+    if (data.stop_reason === "max_tokens") throw new Error("回答太长被截断，请把请求拆小一点。");
+    const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+    aiDraft = JSON.parse(text);
+    const problems = checkDraft(aiDraft);
+    $("aiPreview").textContent = aiDraft.summary + "\n\n" + describeDraft(aiDraft) + (problems.length ? "\n\n⚠️ " + problems.join("\n⚠️ ") : "");
+    $("aiApply").disabled = problems.length > 0;
+    $("aiResult").hidden = false;
+  } catch (e) { say($("aiStatus"), "AI 出错：" + e.message, "err"); }
+  finally { $("aiRun").disabled = false; $("aiBusy").hidden = true; }
+};
+
+function checkDraft(d) {
+  const bad = [], isDate = s => /^\d{4}-\d{2}-\d{2}$/.test(s), isTime = s => /^([01]\d|2[0-3]):[0-5]\d$/.test(s);
+  d.specialDays.forEach(x => {
+    if (!isDate(x.date)) bad.push("特殊日日期格式不对：" + x.date);
+    if (!x.bells.length) bad.push(x.date + " 没有任何一节课的时间");
+    x.bells.forEach(b => { if (!isTime(b.start) || !isTime(b.end) || b.start >= b.end) bad.push(x.date + " 第 " + b.period + " 节时间不对"); });
+  });
+  d.closures.forEach(x => { if (!isDate(x.start) || !isDate(x.end) || x.end < x.start) bad.push("停课日期不对：" + x.start + " – " + x.end); });
+  d.announcements.forEach(x => { if (x.expires && !isDate(x.expires)) bad.push("通知结束日期不对：" + x.expires); });
+  return bad;
+}
+function describeDraft(d) {
+  const lines = [];
+  d.specialDays.forEach(x => lines.push("＋ 特殊日 " + x.date + " " + x.titleZh + (x.remote ? "（远程）" : "") + "\n   " + x.bells.map(b => "P" + b.period + " " + b.start + "–" + b.end).join("  ") + (x.canceled.length ? "\n   取消 P" + x.canceled.join(", P") : "") + (x.notify ? "\n   会通知所有人" : "")));
+  d.closures.forEach(x => lines.push("＋ 停课 " + x.start + (x.end !== x.start ? " – " + x.end : "") + " " + x.titleZh + (x.notify ? "（会通知所有人）" : "")));
+  d.announcements.forEach(x => lines.push("＋ 通知" + (x.level === "urgent" ? "【紧急】" : "") + "：" + x.titleZh + "\n   " + x.bodyZh));
+  d.removeAnnouncements.forEach(id => lines.push("－ 删除通知 " + id));
+  d.removeSpecialDays.forEach(x => lines.push("－ 删除特殊日 " + x));
+  d.removeClosures.forEach(x => lines.push("－ 删除停课 " + x));
+  return lines.join("\n") || "（没有要改的内容）";
+}
+$("aiApply").onclick = () => {
+  const d = aiDraft; if (!d || !feed) return;
+  feed.announcements = feed.announcements.filter(a => !d.removeAnnouncements.includes(a.id));
+  feed.specialDays = feed.specialDays.filter(x => !d.removeSpecialDays.includes(x.date));
+  feed.closures = feed.closures.filter(x => !d.removeClosures.includes(x.start));
+  d.specialDays.forEach(x => { const { notify, ...day } = x; day.bells.sort((a, b) => a.period - b.period); upsertDay(day, notify); });
+  d.closures.forEach(x => { const { notify, ...c } = x; addClosure(c, notify); });
+  d.announcements.forEach(x => { const a = { ...x }; if (!a.expires) delete a.expires; if (!a.link) delete a.link; addAnnouncement(a); });
+  aiDraft = null; $("aiResult").hidden = true; $("aiPrompt").value = ""; $("aiFiles").value = "";
+  say($("aiStatus"), "已加入草稿 ✓ 检查下面的内容，然后点“发布到所有 App”。", "ok");
+  markDirty();
+};
+$("aiDiscard").onclick = () => { aiDraft = null; $("aiResult").hidden = true; };
+$("aiKey").value = store.get("scAIKey") || "";
+
+window.onbeforeunload = e => { if (dirty) { e.preventDefault(); return ""; } };
+$("repo").value = store.get("scRepo") || "henryyang141-crypto/student-center-admin";
+$("token").value = store.get("scToken") || "";
+$("dDate").value = today();
+applyPreset();
+</script>
+</body>
+</html>

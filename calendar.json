@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "updated": "2026-11-06T12:00:00-05:00",
+  "specialDays": [
+    {
+      "date": "2026-11-03",
+      "title": "Remote Instruction Day",
+      "titleZh": "远程教学日",
+      "occasion": "Election Day",
+      "occasionZh": "选举日",
+      "remote": true,
+      "canceled": [
+        1
+      ],
+      "bells": [
+        {
+          "period": 2,
+          "start": "09:00",
+          "end": "09:30"
+        },
+        {
+          "period": 3,
+          "start": "09:35",
+          "end": "10:05"
+        },
+        {
+          "period": 4,
+          "start": "10:10",
+          "end": "10:40"
+        },
+        {
+          "period": 5,
+          "start": "10:45",
+          "end": "11:15"
+        },
+        {
+          "period": 6,
+          "start": "11:20",
+          "end": "11:50"
+        },
+        {
+          "period": 7,
+          "start": "11:55",
+          "end": "12:25"
+        },
+        {
+          "period": 8,
+          "start": "12:30",
+          "end": "13:00"
+        },
+        {
+          "period": 9,
+          "start": "13:05",
+          "end": "13:35"
+        },
+        {
+          "period": 10,
+          "start": "13:40",
+          "end": "14:10"
+        },
+        {
+          "period": 11,
+          "start": "14:15",
+          "end": "14:45"
+        }
+      ],
+      "note": "Log in and follow the modified schedule. Complete the daily attendance form and check Google Classroom for each course.",
+      "noteZh": "请登录并按调整后的课表上课。填写每日出勤表，查看每门课的 Google Classroom。"
+    }
+  ],
+  "closures": [],
+  "announcements": []
+}
