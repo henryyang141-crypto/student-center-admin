@@ -6,157 +6,280 @@
 <meta name="robots" content="noindex">
 <title>Student Center 控制台</title>
 <style>
-  :root { --bg:#f2f2f7; --card:#fff; --ink:#1c1c1e; --muted:#6e6e73; --line:#d1d1d6; --accent:#0a84ff; --danger:#ff3b30; --ok:#34c759; --warn:#ff9500; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#000; --card:#1c1c1e; --ink:#f2f2f7; --muted:#98989d; --line:#38383a; } }
+  :root {
+    --bg: #ffffff; --alt: #f5f5f7; --card: #ffffff; --ink: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7;
+    --accent: #0071e3; --accent-hover: #0077ed; --link: #0066cc; --danger: #e30000; --ok: #1d8f3a; --warn: #b64400;
+    --nav: rgba(250, 250, 252, .8); --field: #ffffff; --shadow: 0 4px 24px rgba(0, 0, 0, .06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #000000; --alt: #101010; --card: #1c1c1e; --ink: #f5f5f7; --muted: #a1a1a6; --line: #424245;
+      --accent: #0071e3; --accent-hover: #0077ed; --link: #2997ff; --danger: #ff6961; --ok: #30d158; --warn: #ff9f0a;
+      --nav: rgba(22, 22, 23, .8); --field: #1c1c1e; --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000; --alt: #101010; --card: #1c1c1e; --ink: #f5f5f7; --muted: #a1a1a6; --line: #424245;
+    --link: #2997ff; --danger: #ff6961; --ok: #30d158; --warn: #ff9f0a; --nav: rgba(22, 22, 23, .8); --field: #1c1c1e; --shadow: none;
+  }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.45 -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif; }
-  main { max-width: 860px; margin: 0 auto; padding: 24px 16px 80px; }
-  h1 { font-size: 28px; margin: 8px 0 4px; }
-  h2 { font-size: 20px; margin: 0 0 12px; }
-  .sub { color: var(--muted); margin: 0 0 20px; }
-  section { background: var(--card); border-radius: 16px; padding: 18px; margin: 16px 0; }
-  label { display:block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
-  input, textarea, select { width:100%; font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; }
-  textarea { min-height: 70px; resize: vertical; }
-  .row { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .row3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-  @media (max-width: 560px) { .row, .row3 { grid-template-columns: 1fr; } }
-  button { font: inherit; border: 0; border-radius: 10px; padding: 10px 16px; cursor: pointer; background: var(--accent); color: #fff; font-weight: 600; }
-  button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); font-weight: 500; }
-  button.danger { background: transparent; color: var(--danger); border: 1px solid var(--line); font-weight: 500; padding: 6px 12px; }
-  button:disabled { opacity: .5; cursor: default; }
-  .actions { display:flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; align-items: center; }
-  .item { border-top: 1px solid var(--line); padding: 12px 0; display:flex; gap: 12px; justify-content: space-between; align-items: flex-start; }
-  .item:first-of-type { border-top: 0; }
-  .item small { color: var(--muted); display:block; }
-  .tag { display:inline-block; font-size: 12px; padding: 2px 8px; border-radius: 20px; background: rgba(10,132,255,.12); color: var(--accent); margin-right: 6px; }
-  .tag.urgent { background: rgba(255,59,48,.12); color: var(--danger); }
-  .status { padding: 10px 12px; border-radius: 10px; margin-top: 12px; display:none; }
-  .status.show { display:block; }
-  .status.ok { background: rgba(52,199,89,.12); color: var(--ok); }
-  .status.err { background: rgba(255,59,48,.12); color: var(--danger); }
-  .status.info { background: rgba(10,132,255,.10); color: var(--accent); }
-  table { width:100%; border-collapse: collapse; }
-  td { padding: 4px; }
-  td input { padding: 6px 8px; }
-  .check { display:flex; gap: 8px; align-items:center; margin-top: 10px; }
-  .check input { width:auto; }
+  html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.47 -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: -.022em; -webkit-font-smoothing: antialiased; padding-bottom: 88px; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Navigation */
+  .nav { position: sticky; top: 0; z-index: 20; background: var(--nav); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0,0,0,.08); }
+  .nav-inner { max-width: 1024px; margin: 0 auto; padding: 0 22px; height: 48px; display: flex; align-items: center; gap: 28px; font-size: 12px; }
+  .brand { font-weight: 600; font-size: 14px; color: var(--ink); white-space: nowrap; }
+  .nav-links { display: flex; gap: 24px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+  .nav-links a { color: var(--ink); opacity: .8; white-space: nowrap; }
+  .nav-links a:hover { opacity: 1; text-decoration: none; }
+  .nav-state { white-space: nowrap; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .nav-state::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+  .nav-state.on { color: var(--ink); }
+  .nav-state.on::before { background: var(--ok); }
+
+  /* Bands */
+  .band { padding: 88px 22px; background: var(--bg); }
+  .band.alt { background: var(--alt); }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  .hero { text-align: center; padding: 96px 22px 88px; background: var(--alt); }
+  .eyebrow { font-size: 17px; font-weight: 600; color: var(--muted); margin: 0 0 8px; letter-spacing: -.01em; }
+  .hero .eyebrow { color: var(--accent); }
+  h1 { font-size: clamp(40px, 7vw, 72px); line-height: 1.05; font-weight: 700; letter-spacing: -.015em; margin: 0 0 16px; }
+  h2 { font-size: clamp(32px, 5vw, 48px); line-height: 1.08; font-weight: 700; letter-spacing: -.009em; margin: 0 0 12px; }
+  h3 { font-size: 21px; font-weight: 600; margin: 0 0 4px; letter-spacing: .011em; }
+  .lead { font-size: clamp(19px, 2.4vw, 24px); line-height: 1.33; color: var(--muted); margin: 0 auto 40px; max-width: 720px; letter-spacing: .009em; }
+  .band .lead { margin-left: 0; }
+  .sub { color: var(--muted); font-size: 14px; margin: 0; }
+
+  /* Cards and forms */
+  .card { background: var(--card); border-radius: 18px; padding: 32px; box-shadow: var(--shadow); text-align: left; }
+  .band.alt .card, .hero .card { box-shadow: none; }
+  .band:not(.alt) .card { background: var(--alt); }
+  .card + .card { margin-top: 20px; }
+  .connect { max-width: 680px; margin: 0 auto; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin: 16px 0 6px; letter-spacing: 0; }
+  input, textarea, select { width: 100%; font: inherit; font-size: 17px; color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; outline: none; transition: border-color .2s, box-shadow .2s; }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(0,113,227,.18); }
+  textarea { min-height: 96px; resize: vertical; }
+  input[type=file] { padding: 10px; font-size: 14px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+  .row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 16px; }
+  @media (max-width: 734px) {
+    .row, .row3 { grid-template-columns: 1fr; }
+    .band { padding: 64px 16px; } .hero { padding: 72px 16px 64px; } .card { padding: 22px 18px; }
+    .nav-inner { padding: 0 16px; gap: 16px; } .nav-links { gap: 16px; }
+  }
+
+  /* Buttons */
+  button { font: inherit; font-size: 17px; border: 0; border-radius: 980px; padding: 11px 22px; cursor: pointer; background: var(--accent); color: #fff; font-weight: 400; transition: background .2s; }
+  button:hover { background: var(--accent-hover); }
+  button.ghost { background: transparent; color: var(--link); padding: 11px 8px; }
+  button.ghost:hover { background: transparent; text-decoration: underline; }
+  button.ghost::after { content: " ›"; }
+  button.danger { background: transparent; color: var(--danger); font-size: 14px; padding: 6px 10px; }
+  button.danger:hover { background: transparent; text-decoration: underline; }
+  button:disabled { opacity: .4; cursor: default; }
+  button:disabled:hover { background: var(--accent); }
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; align-items: center; }
+
+  /* Lists */
+  .list { margin-top: 28px; }
+  .list:empty { display: none; }
+  .item { border-top: 1px solid var(--line); padding: 16px 0; display: flex; gap: 16px; justify-content: space-between; align-items: flex-start; }
+  .item:first-child { border-top: 0; }
+  .item b { font-weight: 600; }
+  .item small { color: var(--muted); display: block; font-size: 14px; margin-top: 2px; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 980px; background: rgba(0,113,227,.1); color: var(--link); margin-right: 8px; vertical-align: 2px; }
+  .tag.urgent { background: rgba(227,0,0,.1); color: var(--danger); }
+  .list .sub { padding: 8px 0; }
+
+  /* Status */
+  .status { padding: 12px 16px; border-radius: 12px; margin-top: 16px; display: none; font-size: 15px; }
+  .status.show { display: block; }
+  .status.ok { background: rgba(48,209,88,.12); color: var(--ok); }
+  .status.err { background: rgba(255,59,48,.1); color: var(--danger); }
+  .status.info { background: rgba(0,113,227,.08); color: var(--link); }
+
+  /* Bells */
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 4px 6px 4px 0; }
+  td input { padding: 9px 12px; }
+  .check { display: flex; gap: 10px; align-items: center; margin-top: 14px; font-size: 15px; }
+  .check input { width: 20px; height: 20px; accent-color: var(--accent); }
+
+  /* AI */
+  .ai-card { background: linear-gradient(135deg, rgba(0,113,227,.08), rgba(175,82,222,.08)) , var(--card); }
+  #aiPreview, pre { white-space: pre-wrap; word-break: break-word; font: 14px/1.6 ui-monospace, "SF Mono", Menlo, monospace; background: var(--alt); padding: 16px; border-radius: 12px; max-height: 360px; overflow: auto; margin: 20px 0 0; }
+  .band:not(.alt) pre { background: var(--bg); }
+  details summary { cursor: pointer; color: var(--link); font-size: 17px; }
+
+  /* Publish bar */
+  .publish-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--nav); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-top: 1px solid rgba(0,0,0,.08); }
+  .bar-inner { max-width: 980px; margin: 0 auto; padding: 14px 22px; display: flex; align-items: center; gap: 16px; }
+  .bar-text { flex: 1; font-size: 14px; color: var(--muted); min-width: 0; }
   .pending { color: var(--warn); font-weight: 600; }
-  details summary { cursor: pointer; color: var(--muted); }
-  pre { white-space: pre-wrap; word-break: break-all; font-size: 12px; background: var(--bg); padding: 10px; border-radius: 10px; max-height: 320px; overflow:auto; }
+  #pubStatus { margin: 0; flex: 1; }
+  .foot { text-align: center; color: var(--muted); font-size: 12px; padding: 32px 22px 24px; background: var(--alt); border-top: 1px solid var(--line); }
 </style>
 </head>
 <body>
-<main>
-  <h1>Student Center 控制台</h1>
-  <p class="sub">修改后点“发布”，所有 Student Center App（原版、梁钧淘版、正式版）会读取更新：打开 App 时几秒内生效，后台由 iOS 决定，通常几分钟到一小时。</p>
+<nav class="nav">
+  <div class="nav-inner">
+    <span class="brand">Student Center</span>
+    <div class="nav-links">
+      <a href="#ai">AI 助手</a><a href="#notice">通知</a><a href="#special">特殊课表</a><a href="#closure">停课</a><a href="#review">预览</a>
+    </div>
+    <span id="navState" class="nav-state">未连接</span>
+  </div>
+</nav>
 
-  <section id="connect">
-    <h2>1 · 连接 GitHub</h2>
+<header class="hero" id="connect">
+  <p class="eyebrow">Student Center 控制台</p>
+  <h1>改一次。<br>所有 App 同步。</h1>
+  <p class="lead">远程日、停课和通知，发布后原版、梁钧淘版和正式版一起更新。打开 App 几秒内就能看到。</p>
+  <div class="card connect">
+    <h3>连接 GitHub</h3>
+    <p class="sub">令牌只保存在这台电脑的浏览器里。</p>
     <div class="row">
-      <div><label>仓库（owner/repo）</label><input id="repo" placeholder="your-name/student-center-admin"></div>
-      <div><label>访问令牌（只存在这台电脑的浏览器里）</label><input id="token" type="password" placeholder="github_pat_…"></div>
+      <div><label for="repo">仓库</label><input id="repo" placeholder="your-name/student-center-admin"></div>
+      <div><label for="token">访问令牌</label><input id="token" type="password" placeholder="github_pat_…"></div>
     </div>
     <div class="actions">
       <button id="load">连接并读取</button>
       <button class="ghost" id="forget">忘记令牌</button>
-      <span id="dirty" class="pending" hidden>有未发布的修改</span>
     </div>
     <div id="status" class="status"></div>
-  </section>
+  </div>
+</header>
 
-  <section id="ai">
-    <h2>✨ AI 助手：说一句话，自动填好</h2>
-    <p class="sub" style="margin:0 0 6px">例如：“明天因为暴风雪改远程，第一节取消，9 点开始每节 30 分钟”，或者直接上传学校发的通知截图 / PDF。AI 会生成草稿，你确认后再发布。</p>
-    <textarea id="aiPrompt" placeholder="用中文或英文描述你要做的事…"></textarea>
-    <div class="row">
-      <div><label>附件（可选：截图、PDF、文本）</label><input id="aiFiles" type="file" multiple accept="image/*,application/pdf,text/plain,.txt,.md"></div>
-      <div><label>Anthropic API Key（只存在这台电脑的浏览器里）</label><input id="aiKey" type="password" placeholder="sk-ant-…"></div>
-    </div>
-    <div class="actions"><button id="aiRun">让 AI 理解并填写</button><span id="aiBusy" class="sub" hidden>思考中…</span></div>
-    <div id="aiStatus" class="status"></div>
-    <div id="aiResult" hidden>
-      <pre id="aiPreview"></pre>
-      <div class="actions"><button id="aiApply">加入草稿</button><button class="ghost" id="aiDiscard">不要</button></div>
-    </div>
-  </section>
-
-  <section>
-    <h2>2 · 发送通知 / 公告</h2>
-    <div class="row">
-      <div><label>标题（中文）</label><input id="aTitleZh" placeholder="明天因天气改为远程上课"></div>
-      <div><label>Title (English)</label><input id="aTitle" placeholder="Remote day tomorrow due to weather"></div>
-    </div>
-    <div class="row">
-      <div><label>内容（中文）</label><textarea id="aBodyZh"></textarea></div>
-      <div><label>Message (English)</label><textarea id="aBody"></textarea></div>
-    </div>
-    <div class="row3">
-      <div><label>级别</label><select id="aLevel"><option value="info">普通</option><option value="urgent">紧急（醒目显示）</option></select></div>
-      <div><label>显示到（含当天，可留空）</label><input id="aExpires" type="date"></div>
-      <div><label>链接（可选）</label><input id="aLink" type="url" placeholder="https://"></div>
-    </div>
-    <div class="actions"><button id="addAnnouncement">添加通知</button></div>
-    <div id="announcements"></div>
-  </section>
-
-  <section>
-    <h2>3 · 特殊课表日（远程 / 延迟开学 / 提前放学）</h2>
-    <div class="row3">
-      <div><label>日期</label><input id="dDate" type="date"></div>
-      <div><label>模板</label>
-        <select id="dPreset">
-          <option value="remote">远程教学日（30 分钟课）</option>
-          <option value="delay">延迟 2 小时开学</option>
-          <option value="early">提前放学（每节 30 分钟）</option>
-          <option value="custom">自定义</option>
-        </select>
+<section class="band" id="ai">
+  <div class="wrap">
+    <p class="eyebrow">AI 助手</p>
+    <h2>说一句话，自动填好。</h2>
+    <p class="lead">比如“明天因为暴风雪改远程，第一节取消”，或者直接上传学校的通知截图、PDF。AI 先写好草稿，你确认后再发布。</p>
+    <div class="card ai-card">
+      <label for="aiPrompt">你想做什么</label>
+      <textarea id="aiPrompt" placeholder="用中文或英文描述…"></textarea>
+      <div class="row">
+        <div><label for="aiFiles">附件（可选）</label><input id="aiFiles" type="file" multiple accept="image/*,application/pdf,text/plain,.txt,.md"></div>
+        <div><label for="aiKey">Anthropic API Key（只存在这台电脑）</label><input id="aiKey" type="password" placeholder="sk-ant-…"></div>
       </div>
-      <div><label>取消的节次（逗号分隔，可留空）</label><input id="dCanceled" placeholder="1"></div>
+      <div class="actions"><button id="aiRun">让 AI 理解并填写</button><span id="aiBusy" class="sub" hidden>正在思考…</span></div>
+      <div id="aiStatus" class="status"></div>
+      <div id="aiResult" hidden>
+        <pre id="aiPreview"></pre>
+        <div class="actions"><button id="aiApply">加入草稿</button><button class="ghost" id="aiDiscard">不要这份</button></div>
+      </div>
     </div>
-    <div class="row">
-      <div><label>名称（中文）</label><input id="dTitleZh" value="远程教学日"></div>
-      <div><label>Name (English)</label><input id="dTitle" value="Remote Instruction Day"></div>
-    </div>
-    <div class="row">
-      <div><label>原因（中文）</label><input id="dOccasionZh" placeholder="恶劣天气"></div>
-      <div><label>Reason (English)</label><input id="dOccasion" placeholder="Severe weather"></div>
-    </div>
-    <div class="row">
-      <div><label>说明（中文）</label><textarea id="dNoteZh"></textarea></div>
-      <div><label>Note (English)</label><textarea id="dNote"></textarea></div>
-    </div>
-    <label>铃声时间（每节的新时间；没列出的节次当天没有课）</label>
-    <table><tbody id="bells"></tbody></table>
-    <div class="check"><input type="checkbox" id="dRemote" checked><span>线上上课（App 会显示“远程上课”，不显示洗手间时间）</span></div>
-    <div class="check"><input type="checkbox" id="dNotify" checked><span>同时给所有人发通知</span></div>
-    <div class="actions"><button class="ghost" id="addBell">加一节</button><button id="addDay">添加这一天</button></div>
-    <div id="days"></div>
-  </section>
+  </div>
+</section>
 
-  <section>
-    <h2>4 · 临时停课（雪天等）</h2>
-    <div class="row">
-      <div><label>开始</label><input id="cStart" type="date"></div>
-      <div><label>结束（含）</label><input id="cEnd" type="date"></div>
+<section class="band alt" id="notice">
+  <div class="wrap">
+    <p class="eyebrow">通知</p>
+    <h2>告诉每一位同学。</h2>
+    <p class="lead">每条通知都会推送到手机，并显示在 App 首页，直到你设的日期。</p>
+    <div class="card">
+      <div class="row">
+        <div><label for="aTitleZh">标题（中文）</label><input id="aTitleZh" placeholder="明天因天气改为远程上课"></div>
+        <div><label for="aTitle">Title (English)</label><input id="aTitle" placeholder="Remote day tomorrow due to weather"></div>
+      </div>
+      <div class="row">
+        <div><label for="aBodyZh">内容（中文）</label><textarea id="aBodyZh"></textarea></div>
+        <div><label for="aBody">Message (English)</label><textarea id="aBody"></textarea></div>
+      </div>
+      <div class="row3">
+        <div><label for="aLevel">级别</label><select id="aLevel"><option value="info">普通</option><option value="urgent">紧急（醒目显示）</option></select></div>
+        <div><label for="aExpires">显示到（含当天，可留空）</label><input id="aExpires" type="date"></div>
+        <div><label for="aLink">链接（可选）</label><input id="aLink" type="url" placeholder="https://"></div>
+      </div>
+      <div class="actions"><button id="addAnnouncement">添加通知</button></div>
+      <div id="announcements" class="list"></div>
     </div>
-    <div class="row">
-      <div><label>名称（中文）</label><input id="cTitleZh" placeholder="雪天停课"></div>
-      <div><label>Name (English)</label><input id="cTitle" placeholder="Snow Day"></div>
-    </div>
-    <div class="check"><input type="checkbox" id="cNotify" checked><span>同时给所有人发通知</span></div>
-    <div class="actions"><button id="addClosure">添加停课</button></div>
-    <div id="closures"></div>
-  </section>
+  </div>
+</section>
 
-  <section>
-    <h2>5 · 发布</h2>
-    <p class="sub" style="margin:0">发布会把上面的内容保存到 GitHub。App 在下次检查时读取（打开 App 时立即检查）。</p>
-    <div class="actions"><button id="publish" disabled>发布到所有 App</button></div>
-    <div id="pubStatus" class="status"></div>
-    <details style="margin-top:12px"><summary>查看将要发布的 calendar.json</summary><pre id="preview"></pre></details>
-  </section>
-</main>
+<section class="band" id="special">
+  <div class="wrap">
+    <p class="eyebrow">特殊课表</p>
+    <h2>换个铃声，课照常。</h2>
+    <p class="lead">远程日、延迟开学、提前放学。每位同学的第 N 节课会自动换成这天第 N 节的时间。</p>
+    <div class="card">
+      <div class="row3">
+        <div><label for="dDate">日期</label><input id="dDate" type="date"></div>
+        <div><label for="dPreset">模板</label>
+          <select id="dPreset">
+            <option value="remote">远程教学日（每节 30 分钟）</option>
+            <option value="delay">延迟 2 小时开学</option>
+            <option value="early">提前放学（每节 30 分钟）</option>
+            <option value="custom">自定义</option>
+          </select>
+        </div>
+        <div><label for="dCanceled">取消的节次（逗号分隔）</label><input id="dCanceled" placeholder="1"></div>
+      </div>
+      <div class="row">
+        <div><label for="dTitleZh">名称（中文）</label><input id="dTitleZh" value="远程教学日"></div>
+        <div><label for="dTitle">Name (English)</label><input id="dTitle" value="Remote Instruction Day"></div>
+      </div>
+      <div class="row">
+        <div><label for="dOccasionZh">原因（中文）</label><input id="dOccasionZh" placeholder="恶劣天气"></div>
+        <div><label for="dOccasion">Reason (English)</label><input id="dOccasion" placeholder="Severe weather"></div>
+      </div>
+      <div class="row">
+        <div><label for="dNoteZh">说明（中文）</label><textarea id="dNoteZh"></textarea></div>
+        <div><label for="dNote">Note (English)</label><textarea id="dNote"></textarea></div>
+      </div>
+      <label>每节的新时间（没列出的节次当天没有课）</label>
+      <table><tbody id="bells"></tbody></table>
+      <div class="check"><input type="checkbox" id="dRemote" checked><label for="dRemote" style="margin:0;font-size:15px;font-weight:400;color:inherit">线上上课：App 显示“远程上课”，不显示洗手间时间</label></div>
+      <div class="check"><input type="checkbox" id="dNotify" checked><label for="dNotify" style="margin:0;font-size:15px;font-weight:400;color:inherit">同时给所有人发通知</label></div>
+      <div class="actions"><button id="addDay">添加这一天</button><button class="ghost" id="addBell">加一节</button></div>
+      <div id="days" class="list"></div>
+    </div>
+  </div>
+</section>
+
+<section class="band alt" id="closure">
+  <div class="wrap">
+    <p class="eyebrow">停课</p>
+    <h2>雪天？一键暂停。</h2>
+    <p class="lead">停课期间，App 里的课表、上课提醒和实时活动都会自动暂停。</p>
+    <div class="card">
+      <div class="row">
+        <div><label for="cStart">开始</label><input id="cStart" type="date"></div>
+        <div><label for="cEnd">结束（含当天）</label><input id="cEnd" type="date"></div>
+      </div>
+      <div class="row">
+        <div><label for="cTitleZh">名称（中文）</label><input id="cTitleZh" placeholder="雪天停课"></div>
+        <div><label for="cTitle">Name (English)</label><input id="cTitle" placeholder="Snow Day"></div>
+      </div>
+      <div class="check"><input type="checkbox" id="cNotify" checked><label for="cNotify" style="margin:0;font-size:15px;font-weight:400;color:inherit">同时给所有人发通知</label></div>
+      <div class="actions"><button id="addClosure">添加停课</button></div>
+      <div id="closures" class="list"></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="review">
+  <div class="wrap">
+    <p class="eyebrow">预览</p>
+    <h2>发布前，再看一眼。</h2>
+    <p class="lead">这是 App 将要读取的完整内容。确认无误后，点下方的“发布到所有 App”。</p>
+    <details><summary>查看 calendar.json</summary><pre id="preview"></pre></details>
+  </div>
+</section>
+
+<footer class="foot">Student Center 控制台 · 不收集任何学生数据 · 校历托管在 GitHub</footer>
+
+<div class="publish-bar">
+  <div class="bar-inner">
+    <div class="bar-text"><span id="dirty" class="pending" hidden>有未发布的修改 · </span><span id="pubStatus">发布后，打开 App 几秒内生效。</span></div>
+    <button id="publish" disabled>发布到所有 App</button>
+  </div>
+</div>
 
 <script>
 const PRESETS = {
@@ -168,7 +291,7 @@ let feed = null, sha = null, dirty = false;
 const $ = id => document.getElementById(id);
 const store = { get: k => { try { return localStorage.getItem(k) } catch { return null } }, set: (k, v) => { try { localStorage.setItem(k, v) } catch {} }, del: k => { try { localStorage.removeItem(k) } catch {} } };
 
-function say(el, text, kind) { el.textContent = text; el.className = "status show " + kind; }
+function say(el, text, kind) { el.textContent = text; el.className = el.id === "pubStatus" ? (kind === "err" ? "pending" : "") : "status show " + kind; }
 function markDirty() { dirty = true; $("dirty").hidden = false; $("publish").disabled = !feed; render(); }
 function minutes(t) { const [h, m] = t.split(":").map(Number); return h * 60 + m; }
 function hhmm(n) { return String(Math.floor(n / 60)).padStart(2, "0") + ":" + String(n % 60).padStart(2, "0"); }
@@ -194,7 +317,7 @@ $("load").onclick = async () => {
     sha = file.sha; feed = JSON.parse(decode(file.content));
     feed.specialDays ||= []; feed.closures ||= []; feed.announcements ||= [];
     dirty = false; $("dirty").hidden = true; $("publish").disabled = false;
-    say($("status"), "已连接，读取到 " + feed.announcements.length + " 条通知、" + feed.specialDays.length + " 个特殊日、" + feed.closures.length + " 个停课。", "ok");
+    $("navState").textContent = "已连接"; $("navState").classList.add("on"); say($("status"), "已连接，读取到 " + feed.announcements.length + " 条通知、" + feed.specialDays.length + " 个特殊日、" + feed.closures.length + " 个停课。", "ok");
     render();
   } catch (e) { say($("status"), "连接失败：" + e.message, "err"); }
 };
