@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-06T20:40:00-05:00",
+  "updated": "2026-11-06T20:55:00-05:00",
   "specialDays": [
     {
       "date": "2026-11-03",
@@ -69,16 +69,5 @@
     }
   ],
   "closures": [],
-  "announcements": [
-    {
-      "id": "2026-11-06-test01",
-      "date": "2026-11-06T20:40:00-05:00",
-      "level": "urgent",
-      "expires": "2026-11-06",
-      "title": "Test: Student Center console is live",
-      "titleZh": "测试：Student Center 控制台已上线",
-      "body": "This is a test notice from the new console. It will be removed shortly.",
-      "bodyZh": "这是新控制台发出的测试通知，稍后会删除。"
-    }
-  ]
+  "announcements": []
 }
