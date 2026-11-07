@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-06T20:55:00-05:00",
+  "updated": "2026-11-06T21:09:54-05:00",
   "specialDays": [
     {
       "date": "2026-11-03",
@@ -69,5 +69,16 @@
     }
   ],
   "closures": [],
-  "announcements": []
+  "announcements": [
+    {
+      "id": "2026-11-06-hstdpk",
+      "date": "2026-11-06T21:09:50-05:00",
+      "level": "urgent",
+      "title": "remote day demo",
+      "titleZh": "天气原因 远程教学",
+      "body": "demo",
+      "bodyZh": "测试",
+      "expires": "2026-11-08"
+    }
+  ]
 }
