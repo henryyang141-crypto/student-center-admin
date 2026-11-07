@@ -159,13 +159,13 @@
   <div class="wrap">
     <p class="eyebrow">AI 助手</p>
     <h2>说一句话，自动填好。</h2>
-    <p class="lead">比如“明天因为暴风雪改远程，第一节取消”，或者直接上传学校的通知截图、PDF。AI 先写好草稿，你确认后再发布。</p>
+    <p class="lead">比如“明天因为暴风雪改远程，第一节取消”，或者直接上传学校的通知截图、PDF。AI 先写好草稿，你确认后再发布。不填 Key 也能免费使用：常见说法在浏览器里直接识别；填了 Key 还能读截图和 PDF。</p>
     <div class="card ai-card">
       <label for="aiPrompt">你想做什么</label>
       <textarea id="aiPrompt" placeholder="用中文或英文描述…"></textarea>
       <div class="row">
         <div><label for="aiFiles">附件（可选）</label><input id="aiFiles" type="file" multiple accept="image/*,application/pdf,text/plain,.txt,.md"></div>
-        <div><label for="aiKey">Anthropic API Key（只存在这台电脑）</label><input id="aiKey" type="password" placeholder="sk-ant-…"></div>
+        <div><label for="aiKey">Claude API Key（可选，不填就用免费识别）</label><input id="aiKey" type="password" placeholder="sk-ant-…"></div>
       </div>
       <div class="actions"><button id="aiRun">让 AI 理解并填写</button><span id="aiBusy" class="sub" hidden>正在思考…</span></div>
       <div id="aiStatus" class="status"></div>
@@ -468,11 +468,172 @@ async function fileBlock(file) {
   return { type: "text", text: "Attached file " + file.name + ":\n" + (await file.text()) };
 }
 
+
+// ---- Free local understanding (no API key). Reads common phrasings in Chinese or English and
+// fills the same draft the AI would; anything it can't read is left for the forms.
+const CN_NUM = { "零": 0, "一": 1, "二": 2, "两": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9, "十": 10 };
+function cnNum(s) {
+  s = String(s).trim();
+  if (/^\d+$/.test(s)) return +s;
+  if (s.length === 1) return CN_NUM[s] ?? NaN;
+  if (s[0] === "十") return 10 + (CN_NUM[s[1]] ?? 0);
+  if (s[1] === "十") return CN_NUM[s[0]] * 10 + (CN_NUM[s[2]] ?? 0);
+  return NaN;
+}
+const dayKey = d => d.toISOString().slice(0, 10);
+function addDays(key, n) { const d = new Date(key + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return dayKey(d); }
+const dow = key => new Date(key + "T12:00:00Z").getUTCDay();
+function monthDay(m, d) {
+  const t = today(); let y = +t.slice(0, 4);
+  let key = y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+  if (key < addDays(t, -60)) key = (y + 1) + key.slice(4);
+  return key;
+}
+const WEEK_CN = { "日": 0, "天": 0, "一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6 };
+const WEEK_EN = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sun: 0, mon: 1, tue: 2, tues: 2, wed: 3, thu: 4, thur: 4, thurs: 4, fri: 5, sat: 6 };
+const MONTH_EN = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
+function weekday(target, next) {
+  const t = today();
+  if (next) { const monday = addDays(t, 7 - ((dow(t) + 6) % 7)); return addDays(monday, (target + 6) % 7); }
+  return addDays(t, (target - dow(t) + 7) % 7);
+}
+
+function findDates(text) {
+  let rest = text; const found = [];
+  const take = (re, fn) => {
+    rest = rest.replace(re, (...m) => {
+      const index = m[m.length - 2], key = fn(m);
+      if (key) found.push({ index, key });
+      return " ".repeat(m[0].length);
+    });
+  };
+  take(/(\d{4})-(\d{1,2})-(\d{1,2})/g, m => m[1] + "-" + m[2].padStart(2, "0") + "-" + m[3].padStart(2, "0"));
+  take(/(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]?/g, m => monthDay(+m[1], +m[2]));
+  take(/\b(jan|feb|mar|apr|may|jun|jul|aug|sept?|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?\b/gi, m => monthDay(MONTH_EN[m[1].toLowerCase()], +m[2]));
+  take(/\b(\d{1,2})\/(\d{1,2})\b/g, m => monthDay(+m[1], +m[2]));
+  take(/大后天/g, () => addDays(today(), 3));
+  take(/后天|day after tomorrow/gi, () => addDays(today(), 2));
+  take(/明天|明日|tomorrow/gi, () => addDays(today(), 1));
+  take(/今天|今日|today|tonight/gi, () => today());
+  take(/(下)?\s*(?:个)?(?:周|星期|礼拜)\s*([一二三四五六日天])/g, m => weekday(WEEK_CN[m[2]], !!m[1]));
+  take(/\b(next\s+)?(monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tues?|wed|thur?s?|fri|sat|sun)\b/gi, m => weekday(WEEK_EN[m[2].toLowerCase()], !!m[1]));
+  // "11月10日到12日": a bare day after a dated one keeps that month.
+  take(/(\d{1,2})\s*[日号]/g, m => { const prev = found.slice().sort((a, b) => a.index - b.index).pop(); return prev ? prev.key.slice(0, 8) + m[1].padStart(2, "0") : null; });
+  found.sort((a, b) => a.index - b.index);
+  if (!found.length) return null;
+  const start = found[0].key;
+  let end = start;
+  if (found[1] && /到|至|~|～|-|–|—|和|及|、|through|thru|until|\bto\b|\band\b/i.test(text.slice(found[0].index, found[1].index + 1))) end = found[1].key;
+  return end < start ? { start: end, end: start } : { start, end };
+}
+
+function listNumbers(s) { return s.split(/[、,，和及与\s]+|and/).map(cnNum).filter(n => n >= 1 && n <= 12); }
+function findCanceled(t) {
+  const n = "([\\d一二三四五六七八九十、,，和及与\\s]+?)";
+  let m = t.match(new RegExp("第\\s*" + n + "\\s*节[^，。,.;；]*?(?:取消|不上|停)")) || t.match(new RegExp("(?:取消|不上)\\s*第\\s*" + n + "\\s*节"));
+  if (m) return listNumbers(m[1]);
+  m = t.match(/periods?\s*([\d,\s]+(?:and\s*\d+)?)\s*(?:is|are|will be)?\s*cancel+ed/i) || t.match(/cancel+(?:ed|ing)?\s*periods?\s*([\d,\s]+(?:and\s*\d+)?)/i) || t.match(/no\s+periods?\s*([\d,\s]+(?:and\s*\d+)?)/i);
+  return m ? listNumbers(m[1]) : null;
+}
+function findStart(t) {
+  let m = t.match(/([01]?\d|2[0-3]|[一二三四五六七八九十]{1,3})\s*(?:[:：]\s*(\d{2})|点\s*(半|\d{1,2})?\s*分?)\s*(?:钟)?\s*(?:开始|上课|开学|起|第一节)/);
+  if (!m) m = t.match(/(?:从|于)\s*([01]?\d|2[0-3]|[一二三四五六七八九十]{1,3})\s*(?:[:：]\s*(\d{2})|点\s*(半|\d{1,2})?)/);
+  if (m) {
+    let h = cnNum(m[1]); const min = m[2] ? +m[2] : m[3] === "半" ? 30 : m[3] ? +m[3] : 0;
+    if (h <= 6) h += 12;
+    return h * 60 + min;
+  }
+  m = t.match(/(?:start|begin)s?\s*(?:at\s*)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i) || t.match(/\bat\s+(\d{1,2})(?::(\d{2}))\s*(am|pm)?/i);
+  if (m) { let h = +m[1]; if (m[3] && /pm/i.test(m[3]) && h < 12) h += 12; if (!m[3] && h <= 6) h += 12; return h * 60 + (m[2] ? +m[2] : 0); }
+  return null;
+}
+function findLength(t) {
+  const m = t.match(/每节(?:课)?\s*(\d{2})\s*分钟/) || t.match(/(\d{2})\s*分钟\s*一节/) || t.match(/(\d{2})[-\s]?min(?:ute)?s?\s*(?:class|period|each|per)/i) || t.match(/(?:class|period)s?\s*(?:are|of)?\s*(\d{2})\s*min/i);
+  return m ? +m[1] : null;
+}
+function findDelayHours(t) {
+  const m = t.match(/(?:延迟|推迟|晚)\s*(\d|[一二两三])\s*(?:个)?\s*(?:半)?\s*小时/) || t.match(/(\d)[-\s]?hours?\s*delay/i) || t.match(/delay(?:ed)?\s*(?:by\s*)?(\d)\s*hours?/i);
+  return m ? cnNum(m[1]) : null;
+}
+const REASONS = [
+  [/暴风雪|blizzard|snowstorm/i, "暴风雪", "Snowstorm"], [/大雪|下雪|雪天|\bsnow/i, "下雪", "Snow"], [/暴雨|大雨|heavy rain/i, "暴雨", "Heavy rain"],
+  [/飓风|台风|hurricane/i, "飓风", "Hurricane"], [/冰|ice|icy/i, "道路结冰", "Icy roads"], [/高温|heat/i, "高温", "Extreme heat"],
+  [/停电|power outage/i, "停电", "Power outage"], [/选举|election/i, "选举日", "Election Day"], [/空气|air quality|smoke/i, "空气质量", "Air quality"],
+  [/恶劣天气|天气|weather/i, "恶劣天气", "Severe weather"]
+];
+function findReason(t) {
+  for (const [re, zh, en] of REASONS) if (re.test(t)) return { zh, en };
+  const m = t.match(/(?:因为|由于|因)\s*([^，,。.；;]{1,10}?)(?:的原因|原因|影响|，|,|。|改|停|放|延|提前|$)/);
+  if (m) return { zh: m[1].trim(), en: "" };
+  const e = t.match(/(?:due to|because of)\s+(?:the\s+)?([a-z][a-z ]{1,30}?)(?:[,.;]|$)/i);
+  return e ? { zh: "", en: e[1].trim().replace(/^./, c => c.toUpperCase()) } : { zh: "", en: "" };
+}
+
+function parseLocal(text) {
+  const t = text.trim();
+  const empty = { announcements: [], specialDays: [], closures: [], removeAnnouncements: [], removeSpecialDays: [], removeClosures: [] };
+  const zhText = /[一-鿿]/.test(t);
+  const type = /远程|线上|网课|在家上课|remote|online|virtual/i.test(t) ? "remote"
+    : /延迟|推迟|晚开学|delay/i.test(t) ? "delay"
+    : /提前放学|早放学|半天|early dismissal|half[-\s]day/i.test(t) ? "early"
+    : /停课|放假|不上课|学校关闭|关闭|snow day|school (?:is |will be )?closed|no school|closure/i.test(t) ? "closure" : "notice";
+  const dates = findDates(t);
+  const reason = findReason(t);
+  const fmt = key => new Date(key + "T12:00:00").toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "short" });
+
+  if (type === "notice") {
+    const first = t.split(/[。！!？?\n]|\.\s/)[0].slice(0, 28);
+    const a = { level: /紧急|重要|立即|马上|urgent|important|asap/i.test(t) ? "urgent" : "info", expires: dates ? dates.end : addDays(today(), 2), link: (t.match(/https:\/\/\S+/) || [""])[0],
+      title: zhText ? "" : first, titleZh: zhText ? first : "", body: zhText ? "" : t, bodyZh: zhText ? t : "" };
+    return { ...empty, announcements: [a], summary: "识别为一条" + (a.level === "urgent" ? "紧急" : "普通") + "通知，显示到 " + fmt(a.expires) + "。可以在下方修改。" };
+  }
+  if (!dates) return { ...empty, summary: "没看出是哪一天。请加上日期，比如“明天”“周五”或“11月10日”，再试一次。" };
+
+  if (type === "closure") {
+    const snow = /雪|snow/i.test(t);
+    const c = { start: dates.start, end: dates.end, notify: true,
+      titleZh: snow ? "雪天停课" : (reason.zh ? reason.zh + "停课" : "停课"),
+      title: snow ? "Snow Day" : (reason.en ? "School Closed (" + reason.en + ")" : "School Closed") };
+    return { ...empty, closures: [c], summary: "识别为停课：" + fmt(c.start) + (c.end !== c.start ? " 至 " + fmt(c.end) : "") + "，会通知所有人。" };
+  }
+
+  const p = PRESETS[type];
+  const userCanceled = findCanceled(t);
+  const canceled = userCanceled ?? (p.canceled ? p.canceled.split(",").map(Number) : []);
+  const periods = [];
+  for (let n = userCanceled ? 1 : p.from; n <= p.to; n++) if (!canceled.includes(n)) periods.push(n);
+  const hours = type === "delay" ? findDelayHours(t) : null;
+  let start = findStart(t) ?? (hours ? 8 * 60 + hours * 60 : minutes(p.start));
+  const len = findLength(t) ?? p.length;
+  const bells = periods.map(n => { const b = { period: n, start: hhmm(start), end: hhmm(start + len) }; start += len + p.gap; return b; });
+  const names = { remote: ["远程教学日", "Remote Instruction Day"], delay: ["延迟开学", "Delayed Opening"], early: ["提前放学", "Early Dismissal"] }[type];
+  const days = [];
+  for (let key = dates.start; key <= dates.end; key = addDays(key, 1)) {
+    if (dow(key) === 0 || dow(key) === 6) continue;
+    days.push({ date: key, titleZh: names[0], title: names[1], occasionZh: reason.zh, occasion: reason.en, remote: type === "remote",
+      canceled, bells, note: "", noteZh: "", notify: true });
+  }
+  if (!days.length) return { ...empty, summary: fmt(dates.start) + (dates.end !== dates.start ? " 至 " + fmt(dates.end) : "") + " 是周末，本来就没有课，不需要改课表。" };
+  return { ...empty, specialDays: days,
+    summary: "识别为" + names[0] + "：" + days.map(d => fmt(d.date)).join("、") + (reason.zh ? "（" + reason.zh + "）" : "") +
+      (canceled.length ? "，第 " + canceled.join("、") + " 节取消" : "") + "，" + bells[0].start + " 开始，每节 " + len + " 分钟。会通知所有人。请核对下面的时间。" };
+}
+const draftHasChanges = d => ["announcements", "specialDays", "closures", "removeAnnouncements", "removeSpecialDays", "removeClosures"].some(k => d[k].length);
+
 $("aiRun").onclick = async () => {
   if (!feed) return say($("aiStatus"), "请先在第 1 步连接 GitHub。", "err");
   const key = $("aiKey").value.trim(), prompt = $("aiPrompt").value.trim(), files = [...$("aiFiles").files];
-  if (!key) return say($("aiStatus"), "请填写 Anthropic API Key。", "err");
   if (!prompt && !files.length) return say($("aiStatus"), "请描述要做的事或上传通知。", "err");
+  if (!key) {
+    // Free path: understood right here in the browser.
+    if (!prompt) return say($("aiStatus"), "免费识别只能读文字。要读截图或 PDF，请填写 API Key；也可以把通知里的文字粘进来。", "err");
+    aiDraft = parseLocal(prompt);
+    const problems = checkDraft(aiDraft);
+    $("aiPreview").textContent = aiDraft.summary + "\n\n" + describeDraft(aiDraft) + (problems.length ? "\n\n⚠️ " + problems.join("\n⚠️ ") : "") + (files.length ? "\n\n（免费识别不读附件）" : "");
+    $("aiApply").disabled = problems.length > 0 || !draftHasChanges(aiDraft);
+    $("aiStatus").className = "status"; $("aiResult").hidden = false;
+    return;
+  }
   store.set("scAIKey", key);
   $("aiRun").disabled = true; $("aiBusy").hidden = false; $("aiResult").hidden = true; $("aiStatus").className = "status";
   try {
