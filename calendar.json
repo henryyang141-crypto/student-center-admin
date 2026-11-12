@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-10T10:32:18-05:00",
+  "updated": "2026-11-12T10:43:29-05:00",
   "specialDays": [
     {
       "date": "2026-11-03",
@@ -69,5 +69,17 @@
     }
   ],
   "closures": [],
-  "announcements": []
+  "announcements": [
+    {
+      "id": "2026-11-12-h08lq4",
+      "date": "2026-11-12T10:43:25-05:00",
+      "level": "urgent",
+      "title": "Special Half Day Schedule for Friday, November 20th",
+      "titleZh": "11月20日（周五）半天特别日程安排",
+      "body": "Dear Students:\nBayside High School is holding Parent Teacher Conferences by scheduled telephone appointments with the following schedule:\n● Thursday, November 19th, 2026: 6:30 PM - 9:00 PM\n● Friday, November 20th, 2026: 12:50 PM - 2:50 PM\nConference scheduling is now available through the PTC Wizard through Monday, November 16, 2026. We encourage you to schedule a meeting with each of your child's teachers to discuss their progress.\nPlease follow the instructions provided in the email sent to your account to access PTC Wizard and arrange your conferences. If the appointment slots are full, contact the teachers and staff by e-mail to schedule an alternate time to schedule a conference.\nThere is a special schedule for the half day on Friday, November 20, 2026. Please see the schedule below:\nPeriods 1, 9, 10, & 11 are cancelled.\nPeriod 2 8:00 - 8:30 A.M.\nPeriod 3 8:33 - 9:03 A.M.\nPeriod 4 9:06 - 9:36 A.M.\nPeriod 5 9:39 - 10:09 A.M.\nPeriod 6 10:12 - 10:42 A.M.\nPeriod 7 10:45 - 11:15 A.M.\nPeriod 8 11:18 - 11:48 A.M.\nStaff Lunch 11:51 - 12:47 P.M.\nParent Conferences 12:50 - 2:50 P.M.\nNote: Student Lunch will be available in the cafeteria, for any student until 2:50 p.m.\nIf you have any questions or concerns, please contact your child’s guidance counselor.\nThank you for your cooperation.\nSincerely,\nBayside High School",
+      "bodyZh": "各位同学：\nBayside高中将通过电话预约的方式举办“家长-教师交流会”（Parent-Teacher Conferences），具体安排如下：\n● 2026年11月19日（周四）：下午6:30 - 晚上9:00\n● 2026年11月20日（周五）：下午12:50 - 下午2:50\n即日起至2026年11月16日（周一），您可通过“PTC Wizard”系统进行预约。我们鼓励您与孩子的每一位任课老师预约交流，讨论学生的学习进展。\n请按照发送至您邮箱的指引，登录“PTC Wizard”系统进行预约。如果预约时段已满，请通过电子邮件直接联系相关老师或教职员工，另行商定交流时间。\n2026年11月20日（周五）为半天课程，具体时间安排如下：\n第1、9、10及11节课取消。\n第2节课：上午8:00 - 8:30\n第3节课：上午8:33 - 9:03\n第4节课：上午9:06 - 9:36\n第5节课：上午9:39 - 10:09\n第6节课：上午10:12 - 10:42\n第7节课：上午10:45 - 11:15\n第8节课：上午11:18 - 11:48\n教职员工午餐：上午11:51 - 下午12:47\n家长-教师交流会：下午12:50 - 2:50\n注：学校食堂将提供午餐，学生可在下午2:50之前前往用餐。如果您有任何疑问或顾虑，请联系您孩子的辅导老师。\n感谢您的配合。\n此致，\n贝赛高中 (Bayside High School)",
+      "expires": "2026-11-20",
+      "link": "https://s3.us-west-1.amazonaws.com/post.jupitered.com/v4/p177380387/1/1255369234/BHS_PTC_Message_Fall_2026.pdf"
+    }
+  ]
 }
