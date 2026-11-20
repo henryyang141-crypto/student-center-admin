@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-12T10:43:29-05:00",
+  "updated": "2026-11-19T21:50:45-05:00",
   "specialDays": [
     {
       "date": "2026-11-03",
@@ -66,10 +66,74 @@
       ],
       "note": "Log in and follow the modified schedule. Complete the daily attendance form and check Google Classroom for each course.",
       "noteZh": "请登录并按调整后的课表上课。填写每日出勤表，查看每门课的 Google Classroom。"
+    },
+    {
+      "date": "2026-11-20",
+      "title": "Parent-Teacher Conferences",
+      "titleZh": "家长-教师交流会",
+      "occasion": "Parent-Teacher Conferences",
+      "occasionZh": "家长-教师交流会",
+      "remote": false,
+      "canceled": [
+        1,
+        9,
+        10,
+        11
+      ],
+      "bells": [
+        {
+          "period": 2,
+          "start": "08:00",
+          "end": "08:30"
+        },
+        {
+          "period": 3,
+          "start": "08:33",
+          "end": "09:03"
+        },
+        {
+          "period": 4,
+          "start": "09:06",
+          "end": "09:36"
+        },
+        {
+          "period": 5,
+          "start": "09:39",
+          "end": "10:09"
+        },
+        {
+          "period": 6,
+          "start": "10:12",
+          "end": "10:42"
+        },
+        {
+          "period": 7,
+          "start": "10:45",
+          "end": "11:15"
+        },
+        {
+          "period": 8,
+          "start": "11:18",
+          "end": "11:48"
+        }
+      ],
+      "note": "Dear Students, Bayside High School will be holding Parent-Teacher Conferences via telephone appointments. The schedule is as follows: ● Thursday, November 19, 2026: 6:30 PM – 9:00 PM ● Friday, November 20, 2026: 12:50 PM – 2:50 PM You may schedule appointments through the \"PTC Wizard\" system starting now until Monday, November 16, 2026. We encourage you to schedule a meeting with each of your teachers to discuss your academic progress. Please follow the instructions sent to your email to log in to the \"PTC Wizard\" system and book your appointments. If all available slots for a teacher are filled, please contact the teacher or staff member directly via email to arrange an alternative time. Friday, November 20, 2026, will be a half-day session. The schedule is as follows: Periods 1, 9, 10, and 11 are cancelled. Period 2: 8:00 AM – 8:30 AM; Period 3: 8:33 AM – 9:03 AM; Period 4: 9:06 AM – 9:36 AM; Period 5: 9:39 AM – 10:09 AM; Period 6: 10:12 AM – 10:42 AM; Period 7: 10:45 AM – 11:15 AM; Period 8: 11:18 AM – 11:48 AM. Staff Lunch: 11:51 AM – 12:47 PM. Parent-Teacher Conferences: 12:50 PM – 2:50 PM. Note: The school cafeteria will be open for lunch; students may eat there before 2:50 PM. If you have any questions or concerns, please contact your guidance counselor. Thank you for your cooperation. Sincerely, Bayside High School",
+      "noteZh": "各位同学： Bayside高中将通过电话预约的方式举办“家长-教师交流会”（Parent-Teacher Conferences），具体安排如下： ● 2026年11月19日（周四）：下午6:30 - 晚上9:00 ● 2026年11月20日（周五）：下午12:50 - 下午2:50 即日起至2026年11月16日（周一），您可通过“PTC Wizard”系统进行预约。我们鼓励您与孩子的每一位任课老师预约交流，讨论学生的学习进展。 请按照发送至您邮箱的指引，登录“PTC Wizard”系统进行预约。如果预约时段已满，请通过电子邮件直接联系相关老师或教职员工，另行商定交流时间。 2026年11月20日（周五）为半天课程，具体时间安排如下： 第1、9、10及11节课取消。 第2节课：上午8:00 - 8:30 第3节课：上午8:33 - 9:03 第4节课：上午9:06 - 9:36 第5节课：上午9:39 - 10:09 第6节课：上午10:12 - 10:42 第7节课：上午10:45 - 11:15 第8节课：上午11:18 - 11:48 教职员工午餐：上午11:51 - 下午12:47 家长-教师交流会：下午12:50 - 2:50 注：学校食堂将提供午餐，学生可在下午2:50之前前往用餐。如果您有任何疑问或顾虑，请联系您孩子的辅导老师。 感谢您的配合。 此致， 贝赛高中 (Bayside High School)"
     }
   ],
   "closures": [],
   "announcements": [
+    {
+      "id": "2026-11-19-5tmmdq",
+      "date": "2026-11-19T21:50:41-05:00",
+      "level": "urgent",
+      "expires": "2026-11-20",
+      "specialDay": "2026-11-20",
+      "titleZh": "11月20日周五 家长-教师交流会（家长-教师交流会）",
+      "title": "Fri, Nov 20: Parent-Teacher Conferences (Parent-Teacher Conferences)",
+      "bodyZh": "当天使用特殊铃声时间。第 1、9、10、11 节取消。第一节 08:00 开始。打开 App 查看你的课表。 各位同学： Bayside高中将通过电话预约的方式举办“家长-教师交流会”（Parent-Teacher Conferences），具体安排如下： ● 2026年11月19日（周四）：下午6:30 - 晚上9:00 ● 2026年11月20日（周五）：下午12:50 - 下午2:50 即日起至2026年11月16日（周一），您可通过“PTC Wizard”系统进行预约。我们鼓励您与孩子的每一位任课老师预约交流，讨论学生的学习进展。 请按照发送至您邮箱的指引，登录“PTC Wizard”系统进行预约。如果预约时段已满，请通过电子邮件直接联系相关老师或教职员工，另行商定交流时间。 2026年11月20日（周五）为半天课程，具体时间安排如下： 第1、9、10及11节课取消。 第2节课：上午8:00 - 8:30 第3节课：上午8:33 - 9:03 第4节课：上午9:06 - 9:36 第5节课：上午9:39 - 10:09 第6节课：上午10:12 - 10:42 第7节课：上午10:45 - 11:15 第8节课：上午11:18 - 11:48 教职员工午餐：上午11:51 - 下午12:47 家长-教师交流会：下午12:50 - 2:50 注：学校食堂将提供午餐，学生可在下午2:50之前前往用餐。如果您有任何疑问或顾虑，请联系您孩子的辅导老师。 感谢您的配合。 此致， 贝赛高中 (Bayside High School)",
+      "body": "Special bell schedule. Period 1, 9, 10, 11 canceled. First class at 08:00. Open the app for your schedule. Dear Students, Bayside High School will be holding Parent-Teacher Conferences via telephone appointments. The schedule is as follows: ● Thursday, November 19, 2026: 6:30 PM – 9:00 PM ● Friday, November 20, 2026: 12:50 PM – 2:50 PM You may schedule appointments through the \"PTC Wizard\" system starting now until Monday, November 16, 2026. We encourage you to schedule a meeting with each of your teachers to discuss your academic progress. Please follow the instructions sent to your email to log in to the \"PTC Wizard\" system and book your appointments. If all available slots for a teacher are filled, please contact the teacher or staff member directly via email to arrange an alternative time. Friday, November 20, 2026, will be a half-day session. The schedule is as follows: Periods 1, 9, 10, and 11 are cancelled. Period 2: 8:00 AM – 8:30 AM; Period 3: 8:33 AM – 9:03 AM; Period 4: 9:06 AM – 9:36 AM; Period 5: 9:39 AM – 10:09 AM; Period 6: 10:12 AM – 10:42 AM; Period 7: 10:45 AM – 11:15 AM; Period 8: 11:18 AM – 11:48 AM. Staff Lunch: 11:51 AM – 12:47 PM. Parent-Teacher Conferences: 12:50 PM – 2:50 PM. Note: The school cafeteria will be open for lunch; students may eat there before 2:50 PM. If you have any questions or concerns, please contact your guidance counselor. Thank you for your cooperation. Sincerely, Bayside High School"
+    },
     {
       "id": "2026-11-12-h08lq4",
       "date": "2026-11-12T10:43:25-05:00",
