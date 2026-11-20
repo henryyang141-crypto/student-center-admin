@@ -360,10 +360,10 @@ function upsertDay(day, notify) {
   const when = new Date(date + "T12:00:00").toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "short" });
   const whenEn = new Date(date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", weekday: "short" });
   addAnnouncement({ level: "urgent", expires: date, specialDay: date,
-    titleZh: when + " " + day.titleZh + (day.occasionZh ? "（" + day.occasionZh + "）" : ""),
-    title: whenEn + ": " + day.title + (day.occasion ? " (" + day.occasion + ")" : ""),
-    bodyZh: (day.remote ? "全天远程上课。" : "当天使用特殊铃声时间。") + (day.canceled.length ? "第 " + day.canceled.join("、") + " 节取消。" : "") + "第一节 " + bells[0].start + " 开始。打开 App 查看你的课表。" + (day.noteZh ? " " + day.noteZh : ""),
-    body: (day.remote ? "Classes meet online. " : "Special bell schedule. ") + (day.canceled.length ? "Period " + day.canceled.join(", ") + " canceled. " : "") + "First class at " + bells[0].start + ". Open the app for your schedule." + (day.note ? " " + day.note : "") });
+    titleZh: when + " " + day.titleZh + (day.occasionZh && day.occasionZh !== day.titleZh ? "（" + day.occasionZh + "）" : ""),
+    title: whenEn + ": " + day.title + (day.occasion && day.occasion !== day.title ? " (" + day.occasion + ")" : ""),
+    bodyZh: (day.remote ? "全天远程上课。" : "当天使用特殊铃声时间。") + (day.canceled.length ? "第 " + day.canceled.join("、") + " 节取消。" : "") + "第一节 " + bells[0].start + " 开始。打开 App 查看你的课表。" + (day.noteZh ? "\n\n" + day.noteZh : ""),
+    body: (day.remote ? "Classes meet online. " : "Special bell schedule. ") + (day.canceled.length ? "Period " + day.canceled.join(", ") + " canceled. " : "") + "First class at " + bells[0].start + ". Open the app for your schedule." + (day.note ? "\n\n" + day.note : "") });
 }
 function addClosure(c, notify) {
   feed.closures.push(c); feed.closures.sort((a, b) => a.start.localeCompare(b.start));
