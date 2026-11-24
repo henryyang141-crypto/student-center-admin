@@ -6,8 +6,8 @@ Edit the text here, not the generated pages.
 """
 from pathlib import Path
 
-UPDATED_ZH = "2026 年 11 月 7 日"
-UPDATED_EN = "November 7, 2026"
+UPDATED_ZH = "2026 年 11 月 23 日"
+UPDATED_EN = "November 23, 2026"
 CONTACT = "https://github.com/henryyang141-crypto/student-center-admin/issues"
 BASE = "https://henryyang141-crypto.github.io/student-center-admin/privacy/"
 
@@ -17,25 +17,25 @@ EDITIONS = {
         dist_zh="开发者本人用 Xcode 直接安装到自己的 iPhone，不上架、不对外分发。",
         dist_en="Installed by the developer on his own iPhone with Xcode. Not on the App Store and not distributed.",
         who_zh="开发者本人（Henry）", who_en="the developer (Henry) himself",
-        builtin=True, jupiter="full", classroom="web+api", doe=False, testflight=False, appstore=False),
+        builtin=True, jupiter="full", classroom="web+api", doe=False, testflight=False, appstore=False, campus=True, watch=True),
     "juntao": dict(
         zh="梁钧淘特别版", en="Liang Juntao edition", app="Student Center 梁钧淘特别版", bundle="com.studentcenter.juntaoliang",
         dist_zh="为梁钧淘个人定制，由开发者用 Xcode 安装到他的设备或模拟器，不上架、不对外分发。",
         dist_en="Made for Liang Juntao personally and installed with Xcode on his device or a simulator. Not on the App Store and not distributed.",
         who_zh="梁钧淘本人", who_en="Liang Juntao himself",
-        builtin=True, jupiter="full", classroom="web+api", doe=False, testflight=False, appstore=False),
+        builtin=True, jupiter="full", classroom="web+api", doe=False, testflight=False, appstore=False, campus=True),
     "appstore": dict(
         zh="正式版（App Store 版）", en="App Store edition", app="Student Center", bundle="com.henryyang.studentcenter.formal",
         dist_zh="通过 Apple App Store 公开发布。为了符合 App Store 审核规则，这个版本对 Jupiter 和 Google Classroom 的功能做了限制（见下文）。",
         dist_en="Published on the Apple App Store. To follow App Store rules, this edition limits what it does with Jupiter and Google Classroom (see below).",
         who_zh="安装它的学生", who_en="the student who installs it",
-        builtin=False, jupiter="manual", classroom="api", doe=True, testflight=False, appstore=True),
+        builtin=False, jupiter="manual", classroom="api", doe=True, testflight=False, appstore=True, campus=False),
     "testflight": dict(
         zh="满血正式版（TestFlight 版）", en="Full edition (TestFlight)", app="SC 满血版", bundle="com.henryyang.studentcenter.full",
         dist_zh="只通过 Apple TestFlight 发给受邀的测试者，不在 App Store 上架。它在正式版的基础上恢复了 Jupiter 自动同步和 Google Classroom 网页登录，所以风险也更高，请完整阅读第 5–7 节。",
         dist_en="Shared only through Apple TestFlight with invited testers; it is not on the App Store. It adds back Jupiter auto-sync and Google Classroom web sign-in on top of the App Store edition, so it carries more risk. Please read sections 5–7 in full.",
         who_zh="受邀的测试者", who_en="invited testers",
-        builtin=False, jupiter="full", classroom="web+api", doe=True, testflight=True, appstore=False),
+        builtin=False, jupiter="full", classroom="web+api", doe=True, testflight=True, appstore=False, campus=True),
 }
 
 
@@ -209,9 +209,17 @@ def zh(ed):
         "不要在借来的、共用的或学校的设备上使用这个 App 连接你的账号。",
     ]))
 
-    S('<h2 id="z9">9. Face ID、相机、相册和 AI</h2>')
+    S('<h2 id="z9">9. Face ID、相机、相册' + ('、定位' if ed["campus"] else '') + '和 AI</h2>')
     S(ul([
         "Face ID / 密码完全由 iOS 处理，App 只知道“验证成功或失败”。",
+    ] + ([
+        "<b>到校、迟到和放学提醒（都可以在设置里分别关闭）：</b>App 请求“始终”定位权限。先用 iOS 的地理围栏发现你靠近 Bayside High School（约 100 米），再取一次精确定位确认你在校园里；教室地图里标了“校门出口”的地方，各有一个约 30 米的小围栏，早上走到那里也算到校，最后一节课快结束后走到那里就算放学离校；离校还会用 iOS 的“访问”检测（判断你离开了某个地方）。迟到提醒是提前排在手机上的本地通知：第一节线下课开始后还没确认到校就提醒一次，确认到校后自动撤销。这些都只判断“在不在学校”。到校、离校时间只记在手机上，第二天自动作废；你的位置不会被保存、上传或发给任何人。拒绝定位权限，其他功能照常使用。",
+        "<b>放学庆祝：</b>最后一节课结束后第一次打开 App，会播放一段彩带动画，并显示近期要交的作业数量。只用手机里的课表和作业，每天一次，可以在设置里关闭。",
+        "<b>教室导航：</b>教室地图随 App 附带，或是你自己导入的 CampusMap.json 文件（由 Bayside Mapper 采集），只存在手机里。录过的路线按记录的转弯、楼梯、经过的教室和照片一步步提示；没录过的路段按地图里教室的记录位置估算方向和距离（估算用的是教室的位置，不是你的）。打开教室导航时，App 会取一次你的位置（需要“使用 App 期间”定位权限），只用来挑离你最近的出发点，用完就丢，不保存；也可以自己选出发点。",
+        "Bayside Mapper 是单独的采集工具：记录地点时会保存当时的坐标、指南针方向、气压高度和你拍的门牌照片；录路线时会保存用时、步数（需要“运动与健身”权限）、出发方向，以及你点的转弯、楼梯、门、经过的教室门牌号和途中照片。这些只存在采集者的手机里，由采集者自己导出分享。请不要拍到其他人的脸或个人信息。",
+    ] if ed["campus"] else []) + ([
+        "<b>Apple Watch：</b>手表 App 从配对的 iPhone 收到一份数据：未来几天的课表、学生证（姓名、OSIS、条形码和照片）、待办作业、最新一个季度的成绩、学校通知和不含照片的教室地图。数据通过 Apple 的 WatchConnectivity 直接从 iPhone 传到手表，不经过任何服务器，存在手表上，方便离开 iPhone 时使用。上下课提醒由手表在本地按课表安排。表盘上的复杂功能会显示当前或下一节课和教室，旁人可能看到。在手表上标记完成的作业会传回 iPhone。删除手表 App 或解除配对会清除手表上的数据。",
+    ] if ed.get("watch") else []) + [
         "相机和相册只在你主动扫描学生卡、课表或选择照片时使用，图片只在本机识别。",
         "作业优先级的 AI 评分使用 Apple 的本机模型（如果设备支持）或简单规则，不发送到任何服务器。",
     ]))
@@ -394,9 +402,17 @@ def en(ed):
         "The Live Activity and widgets show today’s classes and assignments on the Lock Screen and Home Screen.",
         "Don’t connect your accounts in this app on a borrowed, shared or school device.",
     ]))
-    S('<h2 id="e9">9. Face ID, camera, photos and AI</h2>')
+    S('<h2 id="e9">9. Face ID, camera, photos' + (', location' if ed["campus"] else '') + ' and AI</h2>')
     S(ul([
         "Face ID / passcode is handled entirely by iOS; the app only learns whether it succeeded.",
+    ] + ([
+        "<b>Arrival, late and leaving alerts (each can be turned off in Settings):</b> the app asks for “Always” location access. An iOS geofence notices when you're near Bayside High School (about 100 m), then one precise reading confirms you're on the school grounds. Each place marked “School exit” in the classroom map gets a small (about 30 m) geofence: reaching one in the morning also counts as arriving, and reaching one after your last class is (nearly) over counts as leaving; leaving is also noticed from iOS “visits” (which tell that you've left a place). The late alert is a local notification queued on the phone: if your arrival isn't confirmed once the first in-person class has started, it reminds you once, and it's withdrawn as soon as the arrival is confirmed. All of this only decides “at school or not”. Arrival and leaving times stay on the phone and expire the next day; your location is never saved, uploaded or shared. If you decline location access, everything else still works.",
+        "<b>School's-out celebration:</b> the first time you open the app after your last class, a short confetti animation plays and shows how much homework is due soon. It uses only the timetable and assignments on the phone, plays once a day, and can be turned off in Settings.",
+        "<b>Classroom directions:</b> the classroom map comes with the app or is a CampusMap.json file you import yourself (collected with Bayside Mapper) and stays on the phone. Recorded walks are explained step by step from the turns, stairs, rooms passed and photos noted while recording; stretches nobody recorded are estimated from where the rooms were recorded (the rooms' positions, not yours). When you open classroom directions, the app takes one reading of your location (“While Using” permission) only to pick the nearest starting point, then discards it; you can also choose the start yourself.",
+        "Bayside Mapper is a separate collection tool. When you record a place it saves the coordinates, compass heading, barometric height and any door or sign photo you take; when you record a walk it saves the time, step count (“Motion & Fitness” permission), the direction you set off in, and the turns, stairs, doors, door numbers of rooms passed and photos you tap along the way. All of it stays on the collector's phone until the collector exports and shares it. Don't photograph other people's faces or personal information.",
+    ] if ed["campus"] else []) + ([
+        "<b>Apple Watch:</b> the watch app receives a copy of data from the paired iPhone: the next few days' timetable, the student ID (name, OSIS, barcode and photo), assignments to do, the newest quarter's grades, school notices and the classroom map without photos. It goes straight from iPhone to watch over Apple's WatchConnectivity, through no server, and stays on the watch so it works away from the iPhone. Class reminders are scheduled locally on the watch from the timetable. The watch-face complication shows your current or next class and room, which people near you may see. Assignments marked done on the watch are sent back to the iPhone. Deleting the watch app or unpairing the watch removes the data on it.",
+    ] if ed.get("watch") else []) + [
         "The camera and Photos are used only when you choose to scan an ID or schedule or pick a photo, and images are processed on the device.",
         "Assignment priority ratings use Apple’s on-device model (when available) or simple rules. Nothing is sent to a server.",
     ]))
