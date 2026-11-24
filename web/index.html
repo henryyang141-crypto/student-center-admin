@@ -1,0 +1,1438 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Student Center 网页版</title>
+<meta name="description" content="Student Center 网页版：和同学实时聊天，内容不保存；常用学校网站一键直达。">
+<style>
+:root{
+  --bg:#f2f2f7; --surface:#ffffff; --surface2:#f2f2f7; --fill:rgba(118,118,128,.12);
+  --label:#000; --label2:rgba(60,60,67,.6); --label3:rgba(60,60,67,.3);
+  --sep:rgba(60,60,67,.18); --accent:#007aff; --accent-soft:rgba(0,122,255,.08);
+  --green:#34c759; --red:#ff3b30; --orange:#ff9500;
+  --bubble-them:#e9e9eb; --bubble-them-ink:#000;
+  --bar:rgba(249,249,251,.78); --shadow:0 8px 30px rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#000; --surface:#1c1c1e; --surface2:#2c2c2e; --fill:rgba(118,118,128,.24);
+  --label:#fff; --label2:rgba(235,235,245,.6); --label3:rgba(235,235,245,.3);
+  --sep:rgba(84,84,88,.6); --accent:#0a84ff; --accent-soft:rgba(10,132,255,.16);
+  --green:#30d158; --red:#ff453a; --orange:#ff9f0a;
+  --bubble-them:#26252a; --bubble-them-ink:#fff;
+  --bar:rgba(28,28,30,.78); --shadow:0 8px 30px rgba(0,0,0,.5);
+}}
+:root[data-theme="dark"]{
+  --bg:#000; --surface:#1c1c1e; --surface2:#2c2c2e; --fill:rgba(118,118,128,.24);
+  --label:#fff; --label2:rgba(235,235,245,.6); --label3:rgba(235,235,245,.3);
+  --sep:rgba(84,84,88,.6); --accent:#0a84ff; --accent-soft:rgba(10,132,255,.16);
+  --green:#30d158; --red:#ff453a; --orange:#ff9f0a;
+  --bubble-them:#26252a; --bubble-them-ink:#fff;
+  --bar:rgba(28,28,30,.78); --shadow:0 8px 30px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--label);
+  font:17px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Helvetica Neue",Arial,sans-serif;
+  -webkit-text-size-adjust:100%;overflow-x:hidden}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.app{max-width:640px;margin:0 auto;min-height:100%;padding:0 16px calc(110px + env(safe-area-inset-bottom))}
+.view{display:none}
+.view.on{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.view.on{animation:none}}
+
+/* Page heading, as PageHeading in the app */
+.heading{padding:calc(24px + env(safe-area-inset-top)) 4px 18px}
+.heading h1{font-size:34px;line-height:1.1;font-weight:700;letter-spacing:.01em;margin:0}
+.heading p{margin:6px 0 0;color:var(--label2);font-size:15px}
+
+.section-label{font-size:12px;font-weight:600;color:var(--label2);text-transform:uppercase;letter-spacing:.02em;margin:22px 4px 8px}
+.card{background:var(--surface);border-radius:16px;border:.5px solid var(--sep)}
+.footnote{font-size:13px;color:var(--label2);margin:12px 4px 0;line-height:1.45}
+
+/* Apps */
+.app-btn{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px;margin-bottom:12px;text-decoration:none;color:inherit;transition:transform .15s}
+.app-btn:active,.quick:active{transform:scale(.97)}
+.app-icon{width:52px;height:52px;border-radius:13px;display:grid;place-items:center;flex:none;color:#fff}
+.app-btn h3{margin:0;font-size:17px;font-weight:600}
+.app-btn p{margin:4px 0 0;font-size:15px;color:var(--label2)}
+.app-btn .chev{margin-left:auto;color:var(--label3);flex:none}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.quick{display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-height:96px;padding:14px;text-decoration:none;color:inherit;transition:transform .15s}
+.quick .ic{width:34px;height:34px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.quick .row{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:600}
+.quick .row svg{margin-left:auto;color:var(--label2)}
+
+/* Chat: join */
+.field{display:flex;align-items:center;gap:12px;padding:12px 16px}
+.field+.field{border-top:.5px solid var(--sep)}
+.field label{width:64px;flex:none;font-size:15px;color:var(--label2)}
+.field input{flex:1;min-width:0;border:0;background:transparent;outline:0;font-size:17px;padding:2px 0}
+.field input::placeholder{color:var(--label3)}
+#codeInput{text-transform:uppercase;letter-spacing:.12em;font-variant-numeric:tabular-nums}
+#codeInput::placeholder{text-transform:none;letter-spacing:0}
+.btns{display:flex;gap:10px;margin-top:14px}
+.btn{flex:1;border:0;border-radius:14px;padding:14px 12px;font-size:17px;font-weight:600;transition:transform .15s,opacity .15s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.plain{background:var(--surface);color:var(--accent);border:.5px solid var(--sep)}
+.btn:disabled{opacity:.45}
+.notes{list-style:none;margin:0;padding:6px 0}
+.notes li{display:flex;gap:12px;padding:10px 16px;font-size:15px;line-height:1.4}
+.notes li+li{border-top:.5px solid var(--sep)}
+.notes svg{flex:none;color:var(--accent);margin-top:1px}
+.error{color:var(--red);font-size:14px;margin:10px 4px 0;min-height:1em}
+
+/* Chat: room */
+#roomView{position:fixed;inset:0;display:none;flex-direction:column;background:var(--bg);z-index:5}
+#roomView.on{display:flex}
+.room-top{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;background:var(--bar);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--sep)}
+.room-top .title{flex:1;min-width:0;text-align:center}
+.room-top .title b{display:block;font-size:17px;font-weight:600;letter-spacing:.08em}
+.room-top .title span{font-size:12px;color:var(--label2)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:5px;vertical-align:1px}
+.dot.wait{background:var(--orange)}
+.pill{border:0;background:var(--fill);border-radius:999px;padding:7px 12px;font-size:15px;color:var(--accent);font-weight:600;white-space:nowrap}
+.pill.leave{color:var(--red)}
+#messages{flex:1;overflow-y:auto;padding:14px 12px 8px;max-width:640px;width:100%;margin:0 auto;-webkit-overflow-scrolling:touch}
+.sys{text-align:center;font-size:12px;color:var(--label2);margin:10px 24px;line-height:1.4}
+.sys.privacy{background:var(--surface);border:.5px solid var(--sep);border-radius:14px;padding:10px 14px;margin:4px 8px 14px;font-size:13px}
+.msg{display:flex;flex-direction:column;align-items:flex-start;margin:2px 0;max-width:100%}
+.msg.me{align-items:flex-end}
+.msg .who{font-size:12px;color:var(--label2);margin:8px 12px 2px;border:0;background:none;padding:0}
+.bubble{max-width:78%;padding:8px 13px;border-radius:19px;background:var(--bubble-them);color:var(--bubble-them-ink);
+  white-space:pre-wrap;overflow-wrap:anywhere;font-size:17px;line-height:1.3;animation:pop .22s cubic-bezier(.2,.9,.3,1.3)}
+.msg.me .bubble{background:var(--accent);color:#fff}
+.msg .time{font-size:11px;color:var(--label3);margin:2px 12px 0}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.bubble{animation:none}}
+.composer{display:flex;align-items:flex-end;gap:8px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:var(--bar);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--sep)}
+.composer-inner{display:flex;align-items:flex-end;gap:8px;max-width:640px;width:100%;margin:0 auto}
+#text{flex:1;resize:none;border:.5px solid var(--sep);background:var(--surface);border-radius:20px;padding:8px 14px;font-size:17px;line-height:1.3;max-height:120px;outline:0}
+#send{flex:none;width:36px;height:36px;border-radius:50%;border:0;background:var(--accent);color:#fff;display:grid;place-items:center;transition:transform .15s,opacity .15s}
+#send:disabled{opacity:.35}
+#send:active{transform:scale(.9)}
+.count{font-size:11px;color:var(--label3);text-align:right;padding:0 16px 2px;max-width:640px;margin:0 auto;width:100%;min-height:14px}
+
+/* Floating tab bar, like the app's */
+.tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:4;
+  display:flex;gap:4px;padding:5px;border-radius:999px;background:var(--bar);border:.5px solid var(--sep);box-shadow:var(--shadow);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px)}
+.tab{border:0;background:transparent;border-radius:999px;padding:7px 22px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--label);transition:background .2s,color .2s}
+.tab[aria-selected="true"]{background:var(--fill);color:var(--accent)}
+
+/* Small sheet for a person: block */
+.sheet-back{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:flex-end;justify-content:center;z-index:9}
+.sheet-back.on{display:flex}
+.sheet{width:100%;max-width:520px;background:var(--surface);border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));animation:up .25s ease}
+@keyframes up{from{transform:translateY(40px);opacity:.5}to{transform:none;opacity:1}}
+.sheet h2{margin:0 0 6px;font-size:20px}
+.sheet p{margin:0 0 14px;color:var(--label2);font-size:15px}
+.btn.danger{background:var(--red);color:#fff}
+.toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-200%);opacity:0;transition:transform .3s,opacity .3s;background:var(--surface);border:.5px solid var(--sep);box-shadow:var(--shadow);border-radius:999px;padding:10px 18px;font-size:15px;font-weight:600;z-index:10}
+.toast.on{transform:translateX(-50%);opacity:1}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* Game */
+.game-card{position:relative;overflow:hidden;border-radius:22px;border:.5px solid var(--sep);background:var(--surface);touch-action:none;user-select:none;-webkit-user-select:none}
+#swell{display:block;width:100%;height:clamp(340px,72vw,520px);cursor:pointer}
+.hud{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:8px;pointer-events:none}
+.hud span{background:rgba(255,255,255,.72);color:#0b2545;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-radius:999px;padding:5px 11px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.hud .best{margin-left:auto;font-weight:600;color:#3a4f6b}
+.hud span:empty{display:none}
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:24px;
+  background:linear-gradient(180deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.55) 45%,rgba(255,255,255,.75) 100%);color:#0b2545;transition:opacity .25s}
+.overlay.hidden{opacity:0;pointer-events:none}
+.overlay h2{margin:0;font-size:30px;font-weight:800;letter-spacing:-.01em}
+.overlay p{margin:0;font-size:15px;color:#3a4f6b;max-width:300px;line-height:1.4}
+.overlay .big{font-size:44px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.overlay .btn{flex:none;min-width:170px;margin-top:6px}
+.how{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
+.how div{padding:12px;font-size:13px;color:var(--label2);line-height:1.35}
+.how b{display:block;color:var(--label);font-size:15px;margin-bottom:2px}
+
+.seg{display:flex;background:var(--fill);border-radius:10px;padding:2px;margin:0 0 12px}
+.seg button{flex:1;border:0;background:transparent;border-radius:8px;padding:7px 10px;font-size:14px;font-weight:600;color:var(--label);transition:background .2s,box-shadow .2s}
+.seg button[aria-selected="true"]{background:var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.game-pane[hidden]{display:none}
+#tideStage{width:100%;height:clamp(420px,120vw,600px);background:linear-gradient(#8fd3ff,#e3f5ff)}
+#tideStage canvas{display:block;width:100%!important;height:100%!important}
+.trick{position:absolute;left:50%;top:22%;transform:translate(-50%,0) scale(.8);opacity:0;font-size:26px;font-weight:800;color:#fff;text-shadow:0 2px 12px rgba(0,60,120,.45);pointer-events:none;transition:opacity .2s,transform .25s}
+.trick.on{opacity:1;transform:translate(-50%,0) scale(1)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Chat: join a room -->
+  <section class="view on" id="chatView" aria-labelledby="chatTitle">
+    <div class="heading"><h1 id="chatTitle" data-zh="聊天" data-en="Chat">聊天</h1>
+      <p data-zh="和同学实时聊天，聊天内容不保存" data-en="Chat live with classmates. Nothing is saved.">和同学实时聊天，聊天内容不保存</p></div>
+
+    <div class="card">
+      <div class="field"><label for="nameInput" data-zh="昵称" data-en="Name">昵称</label>
+        <input id="nameInput" maxlength="20" autocomplete="nickname" data-ph-zh="别人看到的名字" data-ph-en="What others see" placeholder="别人看到的名字"></div>
+      <div class="field"><label for="codeInput" data-zh="房间码" data-en="Room">房间码</label>
+        <input id="codeInput" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text" data-ph-zh="同学告诉你的 6 位码" data-ph-en="6-letter code from a classmate" placeholder="同学告诉你的 6 位码"></div>
+    </div>
+    <div class="btns">
+      <button class="btn plain" id="newBtn" data-zh="新建房间" data-en="New room">新建房间</button>
+      <button class="btn primary" id="joinBtn" data-zh="加入" data-en="Join">加入</button>
+    </div>
+    <div class="error" id="joinError" role="alert"></div>
+
+    <div class="section-label" data-zh="关于聊天" data-en="About chat">关于聊天</div>
+    <ul class="card notes">
+      <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span data-zh="消息直接在你们的浏览器之间加密传输，不经过也不保存在任何服务器。关掉页面，聊天记录就没了；加入前的消息看不到。" data-en="Messages go straight between your browsers, encrypted, and never pass through or stay on a server. Close the page and the chat is gone; messages sent before you joined aren't shown.">消息直接在你们的浏览器之间加密传输，不经过也不保存在任何服务器。关掉页面，聊天记录就没了；加入前的消息看不到。</span></li>
+      <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span data-zh="只有知道房间码的人能进来。房间码当面告诉同学，别发到公开的地方。" data-en="Only people with the room code can join. Share it in person, not somewhere public.">只有知道房间码的人能进来。房间码当面告诉同学，别发到公开的地方。</span></li>
+      <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <span data-zh="为了直接连上，房间里的人能看到彼此的网络地址（IP），公共服务器只用来帮浏览器互相找到。别发密码、学号、成绩或住址。" data-en="To connect directly, people in a room can see each other's network address (IP); public relays are used only to help browsers find each other. Don't send passwords, student IDs, grades or addresses.">为了直接连上，房间里的人能看到彼此的网络地址（IP），公共服务器只用来帮浏览器互相找到。别发密码、学号、成绩或住址。</span></li>
+    </ul>
+    <p class="footnote"><a href="../privacy/index.html" style="color:var(--accent)" data-zh="Student Center 隐私政策" data-en="Student Center privacy policy">Student Center 隐私政策</a></p>
+  </section>
+
+  <!-- Apps: links out, as the app's Apps screen -->
+  <section class="view" id="appsView" aria-labelledby="appsTitle">
+    <div class="heading"><h1 id="appsTitle">Apps</h1>
+      <p data-zh="学习所需，一步直达" data-en="Your school essentials, together.">学习所需，一步直达</p></div>
+
+    <a class="card app-btn" href="https://login.jupitered.com/login/" target="_blank" rel="noopener">
+      <span class="app-icon" style="background:linear-gradient(135deg,#5e5ce6,#007aff)">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>
+      <span><h3>Jupiter</h3><p data-zh="成绩、作业和出勤" data-en="Grades, assignments and attendance">成绩、作业和出勤</p></span>
+      <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
+    </a>
+    <a class="card app-btn" href="https://teachhub.schools.nyc/Home/Index" target="_blank" rel="noopener">
+      <span class="app-icon" style="background:linear-gradient(135deg,#0a84ff,#64d2ff)">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg></span>
+      <span><h3>TeachHub</h3><p data-zh="NYC 公立学校" data-en="NYC Public Schools">NYC 公立学校</p></span>
+      <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
+    </a>
+    <a class="card app-btn" href="https://classroom.google.com" target="_blank" rel="noopener">
+      <span class="app-icon" style="background:linear-gradient(135deg,#1e8e3e,#34c759)">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><circle cx="12" cy="10" r="2.5"/><path d="M8 18c.8-2 2.2-3 4-3s3.2 1 4 3"/></svg></span>
+      <span><h3>Google Classroom</h3><p data-zh="课堂、作业和公告" data-en="Classes, work and announcements">课堂、作业和公告</p></span>
+      <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
+    </a>
+
+    <div class="section-label" data-zh="常用入口" data-en="Quick links">常用入口</div>
+    <div class="grid">
+      <a class="card quick" href="https://www.schoolsaccount.nyc" target="_blank" rel="noopener">
+        <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M14 10h4M14 14h4M6 16c.6-1.2 1.6-2 3-2s2.4.8 3 2"/></svg></span>
+        <span class="row">NYCSA <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></span></a>
+      <a class="card quick" href="https://mail.google.com" target="_blank" rel="noopener">
+        <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
+        <span class="row">Gmail <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></span></a>
+      <a class="card quick" href="https://drive.google.com" target="_blank" rel="noopener">
+        <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
+        <span class="row">Google Drive <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></span></a>
+      <a class="card quick" href="https://www.baysidehighschool.org" target="_blank" rel="noopener">
+        <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-4 7 4v13M9 21v-5h6v5M9 11h.01M15 11h.01"/></svg></span>
+        <span class="row">Bayside HS <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></span></a>
+    </div>
+    <p class="footnote" data-zh="这些网站会在新标签页打开，需要用你自己的学校账号登录。网页版不会看到或保存你的账号。" data-en="These open in a new tab, and you sign in with your own school account. The web version never sees or saves your sign-in.">这些网站会在新标签页打开，需要用你自己的学校账号登录。网页版不会看到或保存你的账号。</p>
+  </section>
+
+  <!-- Games: an original surfing game -->
+  <section class="view" id="gameView" aria-labelledby="gameTitle">
+    <div class="heading"><h1 id="gameTitle" data-zh="游戏" data-en="Games">游戏</h1>
+      <p data-zh="课间玩一局，记录只存在这台设备上" data-en="A quick run between classes. Your best score stays on this device.">课间玩一局，记录只存在这台设备上</p></div>
+    <div class="seg" role="tablist" aria-label="Game">
+      <button role="tab" aria-selected="true" data-game="tide">Tide Rush</button>
+      <button role="tab" aria-selected="false" data-game="swell">Swell</button>
+    </div>
+
+    <div class="game-pane" id="tidePane">
+      <div class="game-card tide-card" id="tideCard">
+        <div id="tideStage" aria-label="Tide Rush 3D surfing game"></div>
+        <div class="hud"><span id="tDist">0 m</span><span id="tShells">🐚 0</span><span class="best" id="tBest"></span></div>
+        <div class="trick" id="tTrick" aria-live="polite"></div>
+        <div class="overlay" id="tOverlay">
+          <h2>Tide Rush</h2>
+          <p id="tText" data-zh="左右滑动换浪道，往上滑跳过浮木。踩上浪坡会飞起来，空中再往上滑做动作。躲开礁石和浮标，捡贝壳。" data-en="Swipe left or right to change lanes, swipe up to jump driftwood. Ramps launch you; swipe up in the air for a trick. Dodge rocks and buoys, grab shells.">左右滑动换浪道，往上滑跳过浮木。踩上浪坡会飞起来，空中再往上滑做动作。躲开礁石和浮标，捡贝壳。</p>
+          <div class="big" id="tScore" hidden></div>
+          <button class="btn primary" id="tPlay" data-zh="开始" data-en="Play">开始</button>
+        </div>
+      </div>
+      <div class="how">
+        <div class="card"><b data-zh="左右滑" data-en="Swipe ← →">左右滑</b><span data-zh="换浪道（也可以点屏幕左右两边）" data-en="Change lane (or tap either side)">换浪道（也可以点屏幕左右两边）</span></div>
+        <div class="card"><b data-zh="往上滑" data-en="Swipe ↑">往上滑</b><span data-zh="跳起来，越过浮木" data-en="Jump over driftwood">跳起来，越过浮木</span></div>
+        <div class="card"><b data-zh="浪坡" data-en="Ramps">浪坡</b><span data-zh="飞起来后再上滑翻转加分" data-en="Swipe up in the air to flip">飞起来后再上滑翻转加分</span></div>
+      </div>
+    </div>
+
+    <div class="game-pane" id="swellPane" hidden>
+    <div class="game-card">
+      <canvas id="swell" aria-label="Swell surfing game"></canvas>
+      <div class="hud"><span id="hudDist">0 m</span><span id="hudShells">🐚 0</span><span class="best" id="hudBest"></span></div>
+      <div class="overlay" id="gameOverlay">
+        <h2>Swell</h2>
+        <p id="ovText" data-zh="按住往浪尖冲，冲过浪尖就能飞起来；松开顺着浪滑下去。躲开礁石、浮木和海鸥，捡贝壳。" data-en="Hold to carve up the wave and launch off the crest; let go to slide down. Dodge rocks, driftwood and gulls; grab shells.">按住往浪尖冲，冲过浪尖就能飞起来；松开顺着浪滑下去。躲开礁石、浮木和海鸥，捡贝壳。</p>
+        <div class="big" id="ovScore" hidden></div>
+        <button class="btn primary" id="playBtn" data-zh="开始" data-en="Play">开始</button>
+      </div>
+    </div>
+    <div class="how">
+      <div class="card"><b data-zh="按住" data-en="Hold">按住</b><span data-zh="往上冲，冲过浪尖起飞" data-en="Carve up; launch off the crest">往上冲，冲过浪尖起飞</span></div>
+      <div class="card"><b data-zh="松开" data-en="Let go">松开</b><span data-zh="顺着浪滑下来" data-en="Slide back down the wave">顺着浪滑下来</span></div>
+      <div class="card"><b data-zh="空中翻转" data-en="Air spin">空中翻转</b><span data-zh="飞起来再点一下，落地加分" data-en="Tap again in the air for bonus">飞起来再点一下，落地加分</span></div>
+    </div>
+    </div>
+  </section>
+</div>
+
+<!-- Inside a room -->
+<section id="roomView" aria-label="Chat room">
+  <div class="room-top">
+    <button class="pill leave" id="leaveBtn" data-zh="离开" data-en="Leave">离开</button>
+    <div class="title"><b id="roomCode">------</b><span id="roomStatus"><span class="dot wait"></span></span></div>
+    <button class="pill" id="shareBtn" data-zh="邀请" data-en="Invite">邀请</button>
+  </div>
+  <div id="messages" aria-live="polite"></div>
+  <div class="composer">
+    <div class="composer-inner">
+      <label class="sr" for="text" data-zh="消息" data-en="Message">消息</label>
+      <textarea id="text" rows="1" maxlength="500" enterkeyhint="send" data-ph-zh="发消息" data-ph-en="Message" placeholder="发消息"></textarea>
+      <button id="send" disabled aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+    </div>
+  </div>
+  <div class="count" id="count"></div>
+</section>
+
+<nav class="tabbar" role="tablist">
+  <button class="tab" role="tab" aria-selected="true" data-view="chatView">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.5 3 2 6.6 2 11c0 2.4 1.3 4.6 3.4 6.1L4.6 21l4.1-2.3c1 .2 2.1.3 3.3.3 5.5 0 10-3.6 10-8s-4.5-8-10-8z"/></svg>
+    <span data-zh="聊天" data-en="Chat">聊天</span></button>
+  <button class="tab" role="tab" aria-selected="false" data-view="appsView">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2.2"/><rect x="13" y="3" width="8" height="8" rx="2.2"/><rect x="3" y="13" width="8" height="8" rx="2.2"/><rect x="13" y="13" width="8" height="8" rx="2.2"/></svg>
+    <span data-zh="应用" data-en="Apps">应用</span></button>
+  <button class="tab" role="tab" aria-selected="false" data-view="gameView">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M7.5 7h9a5 5 0 0 1 4.9 6l-.6 3a2.6 2.6 0 0 1-4.6 1.1L14.6 15H9.4l-1.6 2.1A2.6 2.6 0 0 1 3.2 16l-.6-3a5 5 0 0 1 4.9-6zm-.5 2.5v1.3H5.7v1.4H7v1.3h1.4v-1.3h1.3v-1.4H8.4V9.5zM16 10a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm2 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>
+    <span data-zh="游戏" data-en="Games">游戏</span></button>
+</nav>
+
+<div class="sheet-back" id="personSheet" role="dialog" aria-modal="true" aria-labelledby="personName">
+  <div class="sheet">
+    <h2 id="personName"></h2>
+    <p id="personNote"></p>
+    <div class="btns" style="margin-top:0">
+      <button class="btn plain" id="personCancel" data-zh="取消" data-en="Cancel">取消</button>
+      <button class="btn danger" id="personBlock"></button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script type="module">
+import {joinRoom, selfId} from 'https://cdn.jsdelivr.net/npm/trystero@0.26.0/+esm'
+
+// Optional TURN relay for networks that block direct browser-to-browser links (some school
+// Wi-Fi). Empty means direct only. Messages through a TURN relay stay end-to-end encrypted
+// and are not stored. Format: [{urls: 'turn:host:3478', username: '…', credential: '…'}]
+const TURN = []
+
+// ---------- Language: follows the browser, like the app's "system" setting
+const zh = (navigator.language || '').toLowerCase().startsWith('zh')
+const T = (z, e) => (zh ? z : e)
+document.documentElement.lang = zh ? 'zh-CN' : 'en'
+document.title = T('Student Center 网页版', 'Student Center Web')
+for (const el of document.querySelectorAll('[data-zh]')) el.textContent = zh ? el.dataset.zh : el.dataset.en
+for (const el of document.querySelectorAll('[data-ph-zh]')) el.placeholder = zh ? el.dataset.phZh : el.dataset.phEn
+
+const $ = id => document.getElementById(id)
+const haptic = ms => { try { navigator.vibrate?.(ms) } catch {} }
+
+// Only the nickname is remembered on this device; chat content never is.
+const store = {
+  get: k => { try { return localStorage.getItem(k) } catch { return null } },
+  set: (k, v) => { try { localStorage.setItem(k, v) } catch {} },
+}
+
+// ---------- Tabs
+for (const tab of document.querySelectorAll('.tab')) {
+  tab.addEventListener('click', () => {
+    for (const t of document.querySelectorAll('.tab')) t.setAttribute('aria-selected', String(t === tab))
+    for (const v of document.querySelectorAll('.view')) v.classList.toggle('on', v.id === tab.dataset.view)
+    haptic(8)
+    window.scrollTo({top: 0})
+    window.dispatchEvent(new CustomEvent('sc-view', {detail: tab.dataset.view}))
+  })
+}
+
+// ---------- Join
+const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // no 0/O, 1/I
+const newCode = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), b => ALPHABET[b % ALPHABET.length]).join('')
+const cleanCode = s => s.toUpperCase().replace(/[^A-Z0-9]/g, '')
+
+$('nameInput').value = store.get('sc-web-name') || ''
+const params = new URLSearchParams(location.hash.slice(1))
+if (params.get('room')) $('codeInput').value = cleanCode(params.get('room'))
+
+function validate(code) {
+  const name = $('nameInput').value.trim()
+  if (!name) return T('先起个昵称。', 'Pick a name first.')
+  if (code.length !== 6) return T('房间码是 6 位字母和数字。', 'Room codes are 6 letters and numbers.')
+  return null
+}
+function tryJoin(code) {
+  const error = validate(code)
+  $('joinError').textContent = error || ''
+  if (error) { haptic([20, 40, 20]); return }
+  store.set('sc-web-name', $('nameInput').value.trim())
+  enterRoom(code, $('nameInput').value.trim())
+}
+$('joinBtn').addEventListener('click', () => tryJoin(cleanCode($('codeInput').value)))
+$('newBtn').addEventListener('click', () => { const c = newCode(); $('codeInput').value = c; tryJoin(c) })
+$('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('joinBtn').click() })
+$('codeInput').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase() })
+
+// ---------- Room
+let room = null, sendMsg = null, sendHello = null
+let myName = '', code = ''
+const names = new Map()        // peerId -> name
+const blocked = new Set()      // peerIds muted on this device only
+const seen = new Set()         // message ids, against duplicates
+let recent = []                // my send times, for a gentle rate limit
+let stuckTimer
+
+async function roomKey(c) {
+  // The room id is derived from the code, so relays never see the code itself.
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('student-center-web:' + c))
+  return [...new Uint8Array(hash)].slice(0, 12).map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+async function enterRoom(c, name) {
+  code = c; myName = name
+  names.clear(); seen.clear(); recent = []
+  $('messages').innerHTML = ''
+  $('roomCode').textContent = c
+  sysLine(T('消息只在房间里的浏览器之间直接传输，不保存。关掉页面聊天记录就没了。', 'Messages go only between the browsers in this room and aren’t saved. Close the page and they’re gone.'), true)
+  sysLine(T(`你以「${name}」加入了房间 ${c}`, `You joined room ${c} as “${name}”`))
+  $('roomView').classList.add('on')
+  document.body.style.overflow = 'hidden'
+  history.replaceState(null, '', '#room=' + c)
+  updateStatus()
+  haptic(12)
+
+  const config = {appId: 'student-center-web-bayside', password: 'sc:' + c}
+  if (TURN.length) config.turnConfig = TURN
+  room = joinRoom(config, await roomKey(c))
+  // If nobody has connected after a while, say why that can happen.
+  clearTimeout(stuckTimer)
+  stuckTimer = setTimeout(() => {
+    if (room && names.size === 0) sysLine(T('还没连上？如果同学已经在这个房间里，可能是学校 Wi‑Fi 挡住了浏览器之间的直连，两边都试试换成手机流量。',
+      'Not connected yet? If a classmate is already in this room, the school Wi‑Fi may be blocking direct browser links. Try mobile data on both sides.'))
+  }, 25000)
+  const msg = room.makeAction('msg')
+  const hello = room.makeAction('hello')
+  sendMsg = msg.send; sendHello = hello.send
+
+  hello.onMessage = (data, {peerId}) => {
+    const n = clip(String(data?.name ?? ''), 20) || T('同学', 'Classmate')
+    const first = !names.has(peerId)
+    names.set(peerId, n)
+    if (first && !blocked.has(peerId)) sysLine(T(`${n} 进来了`, `${n} joined`))
+    updateStatus()
+  }
+  room.onPeerJoin = peerId => { hello.send({name: myName}, {target: peerId}); updateStatus() }
+  room.onPeerLeave = peerId => {
+    const n = names.get(peerId)
+    names.delete(peerId)
+    if (n && !blocked.has(peerId)) sysLine(T(`${n} 离开了`, `${n} left`))
+    updateStatus()
+  }
+  msg.onMessage = (data, {peerId}) => {
+    if (blocked.has(peerId) || !data || typeof data.text !== 'string') return
+    const id = String(data.id || '')
+    if (seen.has(id)) return
+    seen.add(id)
+    bubble(names.get(peerId) || T('同学', 'Classmate'), clip(data.text, 500), false, peerId)
+    if (document.hidden) haptic(10)
+  }
+  hello.send({name: myName})
+}
+
+function leaveRoom() {
+  clearTimeout(stuckTimer)
+  try { room?.leave() } catch {}
+  room = null; sendMsg = null; sendHello = null
+  names.clear(); seen.clear()
+  $('messages').innerHTML = ''          // nothing kept after leaving
+  $('roomView').classList.remove('on')
+  document.body.style.overflow = ''
+  history.replaceState(null, '', location.pathname)
+  haptic(8)
+}
+$('leaveBtn').addEventListener('click', leaveRoom)
+window.addEventListener('pagehide', () => { try { room?.leave() } catch {} })
+
+function updateStatus() {
+  const others = [...names.keys()].filter(id => !blocked.has(id)).length
+  const el = $('roomStatus')
+  el.innerHTML = ''
+  const dot = document.createElement('span')
+  dot.className = 'dot' + (others ? '' : ' wait')
+  el.append(dot, document.createTextNode(others
+    ? T(`${others + 1} 人在线`, `${others + 1} here`)
+    : T('等同学加入…', 'Waiting for classmates…')))
+}
+
+// ---------- Messages
+const clip = (s, n) => s.replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g, '').trim().slice(0, n)
+const timeText = () => new Date().toLocaleTimeString(zh ? 'zh-CN' : 'en-US', {hour: 'numeric', minute: '2-digit'})
+let lastSender = null
+
+function sysLine(text, privacy = false) {
+  const p = document.createElement('div')
+  p.className = 'sys' + (privacy ? ' privacy' : '')
+  p.textContent = text
+  $('messages').append(p)
+  lastSender = null
+  scrollDown()
+}
+
+function bubble(who, text, mine, peerId) {
+  const wrap = document.createElement('div')
+  wrap.className = 'msg' + (mine ? ' me' : '')
+  const key = mine ? 'me' : peerId
+  if (!mine && lastSender !== key) {
+    const name = document.createElement('button')
+    name.className = 'who'
+    name.textContent = who
+    name.title = T('屏蔽这个人', 'Block this person')
+    name.addEventListener('click', () => openPerson(peerId))
+    wrap.append(name)
+  }
+  const b = document.createElement('div')
+  b.className = 'bubble'
+  b.textContent = text                 // text only: never rendered as HTML, links aren't clickable
+  wrap.append(b)
+  const t = document.createElement('div')
+  t.className = 'time'
+  t.textContent = timeText()
+  wrap.append(t)
+  $('messages').append(wrap)
+  lastSender = key
+  scrollDown()
+}
+
+function scrollDown() {
+  const m = $('messages')
+  requestAnimationFrame(() => m.scrollTo({top: m.scrollHeight, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}))
+}
+
+const text = $('text')
+function autosize() { text.style.height = 'auto'; text.style.height = Math.min(text.scrollHeight, 120) + 'px' }
+text.addEventListener('input', () => {
+  autosize()
+  $('send').disabled = !text.value.trim()
+  $('count').textContent = text.value.length > 400 ? `${text.value.length}/500` : ''
+})
+text.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send() }
+})
+$('send').addEventListener('click', send)
+
+function send() {
+  const value = clip(text.value, 500)
+  if (!value || !sendMsg) return
+  const now = Date.now()
+  recent = recent.filter(t => now - t < 10000)
+  if (recent.length >= 8) { toast(T('发太快了，歇几秒', 'Slow down a little')); haptic([20, 40, 20]); return }
+  recent.push(now)
+  const id = selfId + '-' + now + '-' + Math.random().toString(36).slice(2, 7)
+  sendMsg({id, text: value})
+  bubble(myName, value, true)
+  text.value = ''; autosize()
+  $('send').disabled = true; $('count').textContent = ''
+  haptic(6)
+  text.focus()
+}
+
+// ---------- Invite: share the code (and a link that fills it in)
+$('shareBtn').addEventListener('click', async () => {
+  const url = location.origin + location.pathname + '#room=' + code
+  const words = T(`来 Student Center 网页版聊天，房间码 ${code}`, `Chat on Student Center Web — room code ${code}`)
+  try {
+    if (navigator.share) { await navigator.share({title: 'Student Center', text: words, url}); return }
+  } catch (e) { if (e?.name === 'AbortError') return }
+  try { await navigator.clipboard.writeText(`${words}\n${url}`); toast(T('已复制邀请', 'Invite copied')) }
+  catch { toast(T(`房间码：${code}`, `Room code: ${code}`)) }
+})
+
+// ---------- Block someone (this device only)
+let personId = null
+function openPerson(peerId) {
+  personId = peerId
+  const n = names.get(peerId) || T('这位同学', 'This person')
+  $('personName').textContent = n
+  $('personNote').textContent = T('屏蔽后，你在这个房间里不会再看到 TA 的消息。只在你这台设备上生效，对方不会知道。', 'You won’t see their messages in this room any more. Only on this device; they aren’t told.')
+  $('personBlock').textContent = T('屏蔽', 'Block')
+  $('personSheet').classList.add('on')
+}
+$('personCancel').addEventListener('click', () => $('personSheet').classList.remove('on'))
+$('personSheet').addEventListener('click', e => { if (e.target.id === 'personSheet') $('personSheet').classList.remove('on') })
+$('personBlock').addEventListener('click', () => {
+  if (personId) { blocked.add(personId); sysLine(T(`已屏蔽 ${names.get(personId) || ''}`, `Blocked ${names.get(personId) || ''}`)); updateStatus() }
+  $('personSheet').classList.remove('on')
+  haptic(15)
+})
+
+let toastTimer
+function toast(message) {
+  const el = $('toast')
+  el.textContent = message
+  el.classList.add('on')
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => el.classList.remove('on'), 2200)
+}
+</script>
+<script>
+// Swell: an original endless surfing game. Hold to carve up the wave face and launch off the
+// crest, let go to slide down. Only the best score is kept, on this device.
+(() => {
+  const zh = (navigator.language || '').toLowerCase().startsWith('zh')
+  const T = (z, e) => (zh ? z : e)
+  const canvas = document.getElementById('swell')
+  const ctx = canvas.getContext('2d')
+  const card = canvas.parentElement
+  const overlay = document.getElementById('gameOverlay')
+  const ovText = document.getElementById('ovText')
+  const ovScore = document.getElementById('ovScore')
+  const playBtn = document.getElementById('playBtn')
+  const hudDist = document.getElementById('hudDist'), hudShells = document.getElementById('hudShells'), hudBest = document.getElementById('hudBest')
+  const buzz = p => { try { navigator.vibrate?.(p) } catch {} }
+  const getBest = () => { try { return +localStorage.getItem('sc-swell-best') || 0 } catch { return 0 } }
+  const setBest = v => { try { localStorage.setItem('sc-swell-best', String(v)) } catch {} }
+  const dark = () => document.documentElement.dataset.theme === 'dark' ||
+    (document.documentElement.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  let W = 0, H = 0, S = 1, dpr = 1
+  function resize() {
+    const r = canvas.getBoundingClientRect()
+    if (!r.width) return
+    dpr = Math.min(window.devicePixelRatio || 1, 2)
+    W = r.width; H = r.height; S = H / 460
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr)
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    if (state !== 'run') draw(0)
+  }
+  new ResizeObserver(resize).observe(canvas)
+
+  // World layout: the water face runs from the crest line down to the flat sea at the trough.
+  const crestY = () => H * 0.34
+  const troughY = () => H * 0.86
+  const yOf = h => troughY() - h * (troughY() - crestY())
+  const PX = () => Math.max(70 * S, W * 0.26)
+
+  let state = 'ready'   // ready | run | paused | over
+  let t, dist, speed, h, vh, air, spin, spinStart, shells, bonus, holding, obstacles, particles, trail, nextSpawn, popups, last, best = getBest()
+  let shake = 0, flash = 0
+
+  function reset() {
+    t = 0; dist = 0; speed = 250; h = 0.25; vh = 0; air = false; spin = 0; spinStart = -1
+    shells = 0; bonus = 0; holding = false; obstacles = []; particles = []; trail = []; popups = []; nextSpawn = 360
+    shake = 0; flash = 0
+  }
+  reset()
+  const score = () => Math.floor(dist / 40) + shells * 10 + bonus
+
+  function start() {
+    reset(); state = 'run'; overlay.classList.add('hidden'); last = performance.now(); buzz(10)
+    requestAnimationFrame(loop)
+  }
+  function pause() {
+    if (state !== 'run') return
+    state = 'paused'; holding = false
+    showOverlay(T('暂停了', 'Paused'), T('准备好了就继续。', 'Carry on when you’re ready.'), null, T('继续', 'Resume'))
+  }
+  function resume() { state = 'run'; overlay.classList.add('hidden'); last = performance.now(); requestAnimationFrame(loop) }
+  function gameOver() {
+    state = 'over'; holding = false
+    const s = score(), isBest = s > best
+    if (isBest) { best = s; setBest(s) }
+    buzz([40, 30, 70]); shake = 14
+    setTimeout(() => showOverlay(isBest ? T('新纪录！', 'New best!') : T('翻船了', 'Wiped out'),
+      T(`${Math.floor(dist / 40)} 米 · ${shells} 个贝壳` + (bonus ? ` · 翻转 +${bonus}` : '') + (isBest ? '' : ` · 最高 ${best}`),
+        `${Math.floor(dist / 40)} m · ${shells} shells` + (bonus ? ` · spins +${bonus}` : '') + (isBest ? '' : ` · best ${best}`)),
+      s, T('再来一次', 'Play again')), 450)
+  }
+  function showOverlay(title, text, big, button) {
+    overlay.querySelector('h2').textContent = title
+    ovText.textContent = text
+    ovScore.hidden = big == null
+    if (big != null) ovScore.textContent = big
+    playBtn.textContent = button
+    overlay.classList.remove('hidden')
+  }
+
+  playBtn.addEventListener('click', e => { e.stopPropagation(); state === 'paused' ? resume() : start() })
+
+  // Input: hold anywhere on the game to carve up; a tap while airborne spins.
+  const down = e => {
+    if (state !== 'run') return
+    e.preventDefault()
+    holding = true
+    if (air && spinStart < 0) { spinStart = t; buzz(6) }
+  }
+  const up = () => { holding = false }
+  card.addEventListener('pointerdown', down)
+  window.addEventListener('pointerup', up)
+  window.addEventListener('pointercancel', up)
+  window.addEventListener('keydown', e => {
+    if (!document.getElementById('gameView').classList.contains('on') || document.getElementById('swellPane').hidden) return
+    if (e.code === 'Space' || e.code === 'ArrowUp') {
+      e.preventDefault()
+      if (state === 'run') { if (!holding) down(e) }
+      else if (!e.repeat) playBtn.click()
+    }
+  })
+  window.addEventListener('keyup', e => { if (e.code === 'Space' || e.code === 'ArrowUp') up() })
+  window.addEventListener('sc-view', e => { if (e.detail !== 'gameView') pause(); else resize() })
+  window.addEventListener('sc-game', e => { if (e.detail !== 'swell') pause(); else resize() })
+  document.addEventListener('visibilitychange', () => { if (document.hidden) pause() })
+
+  // ---------- Obstacles and shells
+  function spawn() {
+    const level = Math.min(1, t / 90)
+    const roll = Math.random()
+    const x = W + 40 * S
+    if (roll < 0.28) obstacles.push({kind: 'rock', x, h: 0.02, r: 24 + Math.random() * 10})
+    else if (roll < 0.52) obstacles.push({kind: 'log', x, h: 0.38 + Math.random() * 0.34, r: 17, a: Math.random() * 6})
+    else if (roll < 0.52 + 0.18 + level * 0.1) obstacles.push({kind: 'gull', x, h: 1.18 + Math.random() * 0.38, r: 15, a: Math.random() * 6})
+    else {
+      // A trail of shells along a curve; sometimes over the crest, for those who jump.
+      const top = Math.random() < 0.35 ? 1.15 : 0.35 + Math.random() * 0.45
+      const n = 5
+      for (let i = 0; i < n; i++) obstacles.push({kind: 'shell', x: x + i * 34 * S, h: top + Math.sin(i / (n - 1) * Math.PI) * 0.18, r: 11, a: i})
+    }
+    nextSpawn = (300 + Math.random() * 280 - level * 110) * S
+  }
+
+  function particle(x, y, vx, vy, life, size, color) { particles.push({x, y, vx, vy, life, max: life, size, color}) }
+
+  // ---------- Simulation
+  function step(dt) {
+    t += dt
+    speed = Math.min(640, 250 + t * 7.5)
+    const move = speed * S * dt
+    dist += speed * dt
+
+    // Vertical riding on the face (h: 0 trough … 1 crest, above 1 airborne)
+    if (!air) {
+      vh += (holding ? 3.4 : -3.1) * dt
+      vh = Math.max(-2.2, Math.min(1.95, vh))
+      h += vh * dt
+      if (h <= 0) { h = 0; vh = Math.max(0, vh) }
+      if (h >= 1) {
+        if (vh > 0.75) { air = true; spinStart = -1; buzz(8); for (let i = 0; i < 10; i++) particle(PX(), yOf(1), -Math.random() * 160, -Math.random() * 120, .6, 3, 'foam') }
+        else { h = 1; vh = Math.min(vh, 0) }
+      }
+    } else {
+      vh -= (holding ? 2.5 : 3.1) * dt
+      h += vh * dt
+      if (spinStart >= 0) spin = Math.min(1, (t - spinStart) / 0.55)
+      if (h <= 1 && vh < 0) {
+        air = false; h = 1
+        if (spinStart >= 0) {
+          if (spin >= 1) { bonus += 25; popups.push({text: T('翻转 +25', 'Spin +25'), x: PX(), y: yOf(1) - 40 * S, life: 1}); buzz([12, 30, 12]) }
+          else popups.push({text: T('差一点', 'Almost'), x: PX(), y: yOf(1) - 40 * S, life: .8})
+        }
+        spinStart = -1; spin = 0; vh *= 0.35
+        for (let i = 0; i < 14; i++) particle(PX(), yOf(1), -60 - Math.random() * 200, -40 - Math.random() * 160, .7, 3.5, 'foam')
+      }
+    }
+
+    // Spray behind the board while moving fast on the face
+    if (!air && Math.random() < 0.6) particle(PX() - 18 * S, yOf(h) + 4 * S, -80 - Math.random() * 120, -Math.random() * (holding ? 140 : 50), .45, 2.5, 'foam')
+
+    trail.push(yOf(h)); if (trail.length > 26) trail.shift()
+
+    nextSpawn -= move
+    if (nextSpawn <= 0) spawn()
+
+    const sx = PX(), sy = yOf(h) - 14 * S, sr = 15 * S
+    for (const o of obstacles) {
+      o.x -= move * (o.kind === 'gull' ? 1.12 : 1)
+      if (o.kind === 'gull' || o.kind === 'log' || o.kind === 'shell') o.a += dt * (o.kind === 'gull' ? 7 : 2)
+      if (o.dead) continue
+      const oy = yOf(o.h) + (o.kind === 'gull' ? Math.sin(o.a) * 6 * S : 0) - (o.kind === 'rock' ? o.r * S * .35 : 0)
+      const d = Math.hypot(o.x - sx, oy - sy)
+      if (d < sr + o.r * S * (o.kind === 'rock' ? .8 : .85)) {
+        if (o.kind === 'shell') {
+          o.dead = true; shells++; buzz(5)
+          for (let i = 0; i < 6; i++) particle(o.x, oy, (Math.random() - .5) * 160, (Math.random() - .5) * 160, .4, 2.5, 'gold')
+        } else { flash = 1; return gameOver() }
+      }
+    }
+    obstacles = obstacles.filter(o => o.x > -80 * S && !(o.dead && o.kind === 'shell'))
+    for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 420 * dt; p.life -= dt }
+    particles = particles.filter(p => p.life > 0)
+    for (const p of popups) { p.y -= 30 * dt; p.life -= dt }
+    popups = popups.filter(p => p.life > 0)
+  }
+
+  // ---------- Drawing
+  function draw(dt) {
+    const d = dark()
+    const time = (t || 0) + performance.now() / 1000 * (state === 'run' ? 0 : 1)
+    ctx.save()
+    if (shake > 0 && !reduceMotion) { ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake); shake *= 0.85 }
+
+    // Sky
+    const sky = ctx.createLinearGradient(0, 0, 0, crestY())
+    sky.addColorStop(0, d ? '#0b1630' : '#8fd3ff'); sky.addColorStop(1, d ? '#1d3157' : '#e3f5ff')
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H)
+    // Sun or moon
+    ctx.fillStyle = d ? 'rgba(235,240,255,.9)' : 'rgba(255,214,102,.95)'
+    ctx.beginPath(); ctx.arc(W * 0.8, H * 0.13, 22 * S, 0, Math.PI * 2); ctx.fill()
+    if (d) { ctx.fillStyle = '#16264a'; ctx.beginPath(); ctx.arc(W * 0.8 + 9 * S, H * 0.13 - 6 * S, 19 * S, 0, Math.PI * 2); ctx.fill() }
+    // Clouds, slow parallax
+    ctx.fillStyle = d ? 'rgba(255,255,255,.08)' : 'rgba(255,255,255,.85)'
+    for (let i = 0; i < 3; i++) {
+      const cx = ((i * 230 * S - dist * 0.05 * S) % (W + 200 * S) + W + 200 * S) % (W + 200 * S) - 100 * S
+      const cy = H * (0.08 + i * 0.07)
+      ctx.beginPath(); ctx.ellipse(cx, cy, 38 * S, 11 * S, 0, 0, Math.PI * 2); ctx.ellipse(cx + 22 * S, cy - 6 * S, 24 * S, 10 * S, 0, 0, Math.PI * 2); ctx.fill()
+    }
+
+    // The wave face
+    const off = dist * S
+    const face = ctx.createLinearGradient(0, crestY(), 0, H)
+    face.addColorStop(0, d ? '#1b6aa8' : '#2aa7f0'); face.addColorStop(0.6, d ? '#0d3f73' : '#0d74c9'); face.addColorStop(1, d ? '#082a4f' : '#0a5aa0')
+    ctx.fillStyle = face
+    ctx.beginPath(); ctx.moveTo(0, H)
+    for (let x = 0; x <= W + 8; x += 8) ctx.lineTo(x, crestY() + Math.sin((x + off) * 0.018) * 6 * S + Math.sin((x + off * 0.6) * 0.041) * 3 * S)
+    ctx.lineTo(W, H); ctx.closePath(); ctx.fill()
+    // Streaks on the face, for speed
+    ctx.strokeStyle = d ? 'rgba(255,255,255,.07)' : 'rgba(255,255,255,.16)'; ctx.lineWidth = 2 * S; ctx.lineCap = 'round'
+    for (let i = 0; i < 9; i++) {
+      const sx = ((i * 97 * S - off * 1.0) % (W + 120 * S) + W + 120 * S) % (W + 120 * S) - 60 * S
+      const sy = crestY() + (0.15 + (i * 0.37) % 0.75) * (troughY() - crestY())
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + 46 * S, sy - 10 * S); ctx.stroke()
+    }
+    // Foam lip along the crest
+    ctx.fillStyle = d ? 'rgba(220,235,255,.85)' : '#ffffff'
+    ctx.beginPath()
+    for (let x = 0; x <= W + 8; x += 8) ctx.lineTo(x, crestY() + Math.sin((x + off) * 0.018) * 6 * S + Math.sin((x + off * 0.6) * 0.041) * 3 * S - 1)
+    for (let x = W + 8; x >= 0; x -= 8) ctx.lineTo(x, crestY() + 7 * S + Math.sin((x + off) * 0.018) * 6 * S + Math.sin((x * 0.09) + time * 6) * 2.5 * S)
+    ctx.fill()
+    // Flat sea and foam at the trough
+    ctx.fillStyle = d ? 'rgba(180,210,255,.22)' : 'rgba(255,255,255,.45)'
+    ctx.fillRect(0, troughY() + 10 * S, W, 3 * S)
+
+    // Obstacles
+    for (const o of obstacles) {
+      if (o.dead) continue
+      const y = yOf(o.h)
+      if (o.kind === 'rock') {
+        ctx.fillStyle = d ? '#4a5568' : '#6b7280'
+        ctx.beginPath(); ctx.moveTo(o.x - o.r * S, y + 12 * S); ctx.lineTo(o.x - o.r * .5 * S, y - o.r * .9 * S); ctx.lineTo(o.x + o.r * .2 * S, y - o.r * 1.1 * S); ctx.lineTo(o.x + o.r * S, y + 12 * S); ctx.fill()
+        ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillRect(o.x - o.r * 1.1 * S, y + 9 * S, o.r * 2.2 * S, 3 * S)
+      } else if (o.kind === 'log') {
+        ctx.save(); ctx.translate(o.x, y + Math.sin(o.a) * 3 * S); ctx.rotate(Math.sin(o.a) * 0.15)
+        ctx.fillStyle = '#8b5a2b'; roundRect(-26 * S, -7 * S, 52 * S, 14 * S, 7 * S); ctx.fill()
+        ctx.fillStyle = '#c08a52'; ctx.beginPath(); ctx.ellipse(24 * S, 0, 5 * S, 7 * S, 0, 0, Math.PI * 2); ctx.fill()
+        ctx.restore()
+      } else if (o.kind === 'gull') {
+        const gy = y + Math.sin(o.a) * 6 * S, flap = Math.sin(o.a * 1.6) * 8 * S
+        ctx.strokeStyle = d ? '#e5e7eb' : '#374151'; ctx.lineWidth = 3 * S; ctx.lineJoin = 'round'
+        ctx.beginPath(); ctx.moveTo(o.x - 18 * S, gy - flap); ctx.quadraticCurveTo(o.x - 8 * S, gy - 8 * S, o.x, gy); ctx.quadraticCurveTo(o.x + 8 * S, gy - 8 * S, o.x + 18 * S, gy - flap); ctx.stroke()
+      } else if (o.kind === 'shell') {
+        const sy = y + Math.sin(o.a + time * 3) * 2 * S
+        ctx.fillStyle = '#ffb3c7'; ctx.beginPath(); ctx.arc(o.x, sy, 9 * S, Math.PI, 0); ctx.lineTo(o.x + 4 * S, sy + 6 * S); ctx.lineTo(o.x - 4 * S, sy + 6 * S); ctx.fill()
+        ctx.strokeStyle = '#ff7aa2'; ctx.lineWidth = 1.4 * S
+        for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(o.x, sy + 5 * S); ctx.lineTo(o.x + k * 6 * S, sy - 6 * S); ctx.stroke() }
+      }
+    }
+
+    // Wake trail behind the board
+    if (trail.length > 2) {
+      ctx.strokeStyle = 'rgba(255,255,255,.6)'; ctx.lineWidth = 3 * S; ctx.lineCap = 'round'
+      ctx.beginPath()
+      trail.forEach((y, i) => { const x = PX() - (trail.length - i) * (speed / 60) * S * 1.1; i ? ctx.lineTo(x, y + 4 * S) : ctx.moveTo(x, y + 4 * S) })
+      ctx.stroke()
+    }
+
+    // Particles
+    for (const p of particles) {
+      ctx.globalAlpha = Math.max(0, p.life / p.max)
+      ctx.fillStyle = p.color === 'gold' ? '#ffd166' : '#ffffff'
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size * S, 0, Math.PI * 2); ctx.fill()
+    }
+    ctx.globalAlpha = 1
+
+    drawSurfer()
+
+    // Score popups
+    ctx.font = `700 ${16 * S}px -apple-system,BlinkMacSystemFont,sans-serif`; ctx.textAlign = 'center'
+    for (const p of popups) { ctx.globalAlpha = Math.min(1, p.life * 2); ctx.fillStyle = '#ffd166'; ctx.fillText(p.text, p.x, p.y) }
+    ctx.globalAlpha = 1
+
+    if (flash > 0) { ctx.fillStyle = `rgba(255,255,255,${flash * .6})`; ctx.fillRect(0, 0, W, H); flash = Math.max(0, flash - 0.08) }
+    ctx.restore()
+  }
+
+  function roundRect(x, y, w, hh, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, hh, r) : ctx.rect(x, y, w, hh) }
+
+  function drawSurfer() {
+    const x = PX(), y = yOf(h)
+    // Board tilts with how fast the surfer climbs or drops; a full turn while spinning.
+    let angle = -Math.max(-0.5, Math.min(0.5, vh * 0.32))
+    if (spinStart >= 0) angle -= spin * Math.PI * 2
+    ctx.save(); ctx.translate(x, y); ctx.rotate(angle)
+    // Board
+    ctx.fillStyle = '#ff9f0a'
+    ctx.beginPath(); ctx.ellipse(0, 0, 30 * S, 5 * S, 0, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillRect(-24 * S, -1 * S, 48 * S, 2 * S)
+    // Rider: legs, body, arms, head (in the app's accent blue)
+    ctx.strokeStyle = '#0b2545'; ctx.lineWidth = 4.5 * S; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+    const crouch = holding && !air ? 3 * S : 0
+    ctx.beginPath(); ctx.moveTo(-9 * S, -3 * S); ctx.lineTo(-4 * S, -15 * S + crouch); ctx.lineTo(2 * S, -26 * S + crouch)
+    ctx.moveTo(9 * S, -3 * S); ctx.lineTo(5 * S, -15 * S + crouch); ctx.lineTo(2 * S, -26 * S + crouch); ctx.stroke()
+    ctx.strokeStyle = '#007aff'; ctx.lineWidth = 7 * S
+    ctx.beginPath(); ctx.moveTo(2 * S, -26 * S + crouch); ctx.lineTo(4 * S, -40 * S + crouch); ctx.stroke()
+    ctx.strokeStyle = '#0b2545'; ctx.lineWidth = 3.5 * S
+    ctx.beginPath(); ctx.moveTo(4 * S, -37 * S + crouch); ctx.lineTo(-12 * S, -31 * S + crouch); ctx.moveTo(4 * S, -37 * S + crouch); ctx.lineTo(18 * S, -35 * S + crouch); ctx.stroke()
+    ctx.fillStyle = '#f4c7a1'; ctx.beginPath(); ctx.arc(5 * S, -47 * S + crouch, 6.5 * S, 0, Math.PI * 2); ctx.fill()
+    ctx.restore()
+  }
+
+  // ---------- Loop
+  let lastHud = ''
+  function loop(now) {
+    if (state !== 'run' && state !== 'over') return
+    const dt = Math.min(0.033, (now - last) / 1000); last = now
+    if (state === 'run') step(dt)
+    draw(dt)
+    const hud = `${Math.floor(dist / 40)}|${shells}|${best}|${score()}`
+    if (hud !== lastHud) {
+      lastHud = hud
+      hudDist.textContent = `${Math.floor(dist / 40)} ${T('米', 'm')}`
+      hudShells.textContent = `🐚 ${shells}`
+      hudBest.textContent = `${T('得分', 'Score')} ${score()}` + (best ? ` · ${T('最高', 'Best')} ${best}` : '')
+    }
+    if (state === 'run' || shake > 0.5 || flash > 0) requestAnimationFrame(loop)
+  }
+
+  hudBest.textContent = best ? `${T('最高', 'Best')} ${best}` : ''
+  resize()
+  // Idle scene behind the start screen
+  ;(function idle() {
+    if (state === 'ready' || state === 'paused' || state === 'over') {
+      if (state === 'ready' && W) { h = 0.55 + Math.sin(performance.now() / 700) * 0.25; vh = Math.cos(performance.now() / 700) * .4; dist += 2; draw(0) }
+      requestAnimationFrame(idle)
+    }
+  })()
+})()
+</script>
+<script type="module">
+// Tide Rush: an original 3D surf runner (three lanes, swipe to dodge, ramps and tricks).
+// Only the best score is kept, on this device.
+const zh = (navigator.language || '').toLowerCase().startsWith('zh')
+const T = (z, e) => (zh ? z : e)
+const $ = id => document.getElementById(id)
+const buzz = p => { try { navigator.vibrate?.(p) } catch {} }
+const store = {
+  get: k => { try { return localStorage.getItem(k) } catch { return null } },
+  set: (k, v) => { try { localStorage.setItem(k, v) } catch {} },
+}
+
+// ---------- Game picker (Tide Rush / Swell)
+let current = store.get('sc-game') === 'swell' ? 'swell' : 'tide'
+function pick(name) {
+  current = name
+  for (const b of document.querySelectorAll('.seg button')) b.setAttribute('aria-selected', String(b.dataset.game === name))
+  $('tidePane').hidden = name !== 'tide'
+  $('swellPane').hidden = name !== 'swell'
+  store.set('sc-game', name)
+  window.dispatchEvent(new CustomEvent('sc-game', {detail: name}))
+}
+for (const b of document.querySelectorAll('.seg button')) b.addEventListener('click', () => { pick(b.dataset.game); buzz(6) })
+pick(current)
+
+const gameVisible = () => $('gameView').classList.contains('on') && current === 'tide' && !document.hidden
+window.addEventListener('sc-view', e => { if (e.detail === 'gameView' && current === 'tide') init(); else pause() })
+window.addEventListener('sc-game', e => { if (e.detail === 'tide' && $('gameView').classList.contains('on')) init(); else pause() })
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause() })
+
+// ---------- 3D setup (loaded the first time the game is shown)
+let THREE, renderer, scene, camera, ocean, oceanBase, player, board, rider, sun, hemi, dirLight
+let ready = false, loading = false
+const LANES = [-2.3, 0, 2.3]
+const isDark = () => document.documentElement.dataset.theme === 'dark' ||
+  (document.documentElement.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
+
+async function init() {
+  if (ready) { resize(); if (state === 'ready') idle(); return }
+  if (loading) return
+  loading = true
+  try {
+    THREE = await import('https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.min.js')
+  } catch {
+    $('tText').textContent = T('3D 引擎没加载出来，检查一下网络再刷新。', 'The 3D engine didn’t load. Check your connection and refresh.')
+    loading = false
+    return
+  }
+  build()
+  ready = true; loading = false
+  resize(); idle()
+}
+
+function palette() {
+  return isDark()
+    ? {sky: 0x0b1630, fog: 0x10203f, water: 0x0f4f8c, deep: 0x082a4f, hemiSky: 0x7f9cc8, hemiGround: 0x0a2240, sun: 0xe8eeff, light: 1.0}
+    : {sky: 0x9fdcff, fog: 0xcdeeff, water: 0x1f95e8, deep: 0x0a5aa0, hemiSky: 0xffffff, hemiGround: 0x2a7fc0, sun: 0xffd166, light: 1.7}
+}
+
+const mats = {}
+function build() {
+  const stage = $('tideStage')
+  renderer = new THREE.WebGLRenderer({antialias: true, powerPreference: 'high-performance'})
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+  stage.append(renderer.domElement)
+  scene = new THREE.Scene()
+  camera = new THREE.PerspectiveCamera(62, 1, 0.1, 220)
+
+  hemi = new THREE.HemisphereLight(0xffffff, 0x2a7fc0, 1.1)
+  dirLight = new THREE.DirectionalLight(0xffffff, 1.7)
+  dirLight.position.set(-6, 12, 8)
+  scene.add(hemi, dirLight)
+
+  // Ocean: a low-poly sheet whose vertices follow rolling swells
+  const geo = new THREE.PlaneGeometry(70, 150, 44, 96)
+  geo.rotateX(-Math.PI / 2)
+  geo.translate(0, 0, -60)
+  oceanBase = Float32Array.from(geo.attributes.position.array)
+  mats.water = new THREE.MeshStandardMaterial({color: 0x1f95e8, flatShading: true, roughness: 0.35, metalness: 0.05})
+  ocean = new THREE.Mesh(geo, mats.water)
+  scene.add(ocean)
+
+  // Sun (or moon) and a few clouds far away
+  mats.sun = new THREE.MeshBasicMaterial({color: 0xffd166, fog: false})
+  sun = new THREE.Mesh(new THREE.SphereGeometry(6, 24, 16), mats.sun)
+  sun.position.set(28, 26, -150)
+  scene.add(sun)
+  mats.cloud = new THREE.MeshStandardMaterial({color: 0xffffff, flatShading: true, roughness: 1, transparent: true, opacity: 0.92})
+  for (let i = 0; i < 6; i++) {
+    const c = new THREE.Group()
+    for (let k = 0; k < 4; k++) {
+      const puff = new THREE.Mesh(new THREE.IcosahedronGeometry(2.4 + Math.random() * 1.6, 0), mats.cloud)
+      puff.position.set(k * 2.6 - 4, Math.random() * 1.2, Math.random() * 1.5)
+      c.add(puff)
+    }
+    c.position.set(-60 + i * 24 + Math.random() * 8, 18 + Math.random() * 8, -120 - Math.random() * 20)
+    c.userData.drift = 0.6 + Math.random() * 0.6
+    scene.add(c); clouds.push(c)
+  }
+
+  // Surfer: board plus a simple rider in the app's blue
+  player = new THREE.Group()
+  mats.board = new THREE.MeshStandardMaterial({color: 0xff9f0a, flatShading: true, roughness: 0.4})
+  board = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 10), mats.board)
+  board.scale.set(0.42, 0.07, 1.15)
+  const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.02, 1.9), new THREE.MeshStandardMaterial({color: 0xffffff}))
+  stripe.position.y = 0.06
+  player.add(board, stripe)
+  rider = new THREE.Group()
+  const navy = new THREE.MeshStandardMaterial({color: 0x0b2545, flatShading: true})
+  const blue = new THREE.MeshStandardMaterial({color: 0x007aff, flatShading: true})
+  const skin = new THREE.MeshStandardMaterial({color: 0xf4c7a1, flatShading: true})
+  const limb = (r, l, m) => new THREE.Mesh(new THREE.CapsuleGeometry(r, l, 4, 8), m)
+  const legL = limb(0.11, 0.55, navy); legL.position.set(0, 0.42, 0.28); legL.rotation.x = 0.25
+  const legR = limb(0.11, 0.55, navy); legR.position.set(0, 0.42, -0.28); legR.rotation.x = -0.25
+  const torso = limb(0.2, 0.5, blue); torso.position.set(0, 1.05, 0)
+  const head = new THREE.Mesh(new THREE.IcosahedronGeometry(0.2, 1), skin); head.position.set(0, 1.55, 0)
+  const armL = limb(0.07, 0.5, blue); armL.position.set(0, 1.15, 0.42); armL.rotation.x = 1.25
+  const armR = limb(0.07, 0.5, blue); armR.position.set(0, 1.15, -0.42); armR.rotation.x = -1.25
+  rider.add(legL, legR, torso, head, armL, armR)
+  rider.position.y = 0.05
+  rider.rotation.y = 0.35   // feet along the board, turned a little toward the camera
+  player.add(rider)
+  scene.add(player)
+
+  // Shared obstacle materials and geometry
+  mats.rock = new THREE.MeshStandardMaterial({color: 0x6b7280, flatShading: true, roughness: 0.9})
+  mats.buoyRed = new THREE.MeshStandardMaterial({color: 0xff3b30, flatShading: true})
+  mats.buoyWhite = new THREE.MeshStandardMaterial({color: 0xffffff, flatShading: true})
+  mats.log = new THREE.MeshStandardMaterial({color: 0x8b5a2b, flatShading: true, roughness: 0.8})
+  mats.ramp = new THREE.MeshStandardMaterial({color: 0x7fd3ff, flatShading: true, roughness: 0.3, transparent: true, opacity: 0.95})
+  mats.shell = new THREE.MeshStandardMaterial({color: 0xffb3c7, emissive: 0xff7aa2, emissiveIntensity: 0.35, flatShading: true})
+  mats.foam = new THREE.MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.85})
+
+  // Spray particles and lane foam, both pooled
+  const sprayGeo = new THREE.IcosahedronGeometry(0.08, 0)
+  for (let i = 0; i < 60; i++) { const m = new THREE.Mesh(sprayGeo, mats.foam); m.visible = false; scene.add(m); spray.push({m, life: 0, v: new THREE.Vector3()}) }
+  const dashGeo = new THREE.BoxGeometry(0.08, 0.02, 1.4)
+  for (let i = 0; i < 26; i++) {
+    const m = new THREE.Mesh(dashGeo, mats.foam)
+    m.position.set(i % 2 ? 1.15 : -1.15, 0, -i * 5)
+    scene.add(m); dashes.push(m)
+  }
+
+  applyTheme()
+  matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme)
+  new ResizeObserver(resize).observe(stage)
+}
+
+function applyTheme() {
+  if (!scene) return
+  const p = palette()
+  scene.background = new THREE.Color(p.sky)
+  scene.fog = new THREE.Fog(p.fog, 35, 120)
+  mats.water.color.set(p.water)
+  hemi.color.set(p.hemiSky); hemi.groundColor.set(p.hemiGround)
+  dirLight.intensity = p.light
+  mats.sun.color.set(p.sun)
+  mats.cloud.opacity = isDark() ? 0.18 : 0.92
+  $('tideStage').style.background = isDark() ? '#0b1630' : '#9fdcff'
+  if (state !== 'run') render()
+}
+
+function resize() {
+  if (!renderer) return
+  const r = $('tideStage').getBoundingClientRect()
+  if (!r.width) return
+  renderer.setSize(r.width, r.height, false)
+  camera.aspect = r.width / r.height
+  // Narrow phones need a wider view to see all three lanes
+  camera.fov = camera.aspect < 0.8 ? 70 : 60
+  camera.updateProjectionMatrix()
+  if (state !== 'run') render()
+}
+
+// ---------- World state
+const clouds = [], spray = [], dashes = []
+let obstacles = []
+let state = 'ready'   // ready | run | paused | over
+let t = 0, dist = 0, speed = 16, lane = 1, px = 0, py = 0, vy = 0, onRamp = false
+let trick = -1, trickDone = 0, shells = 0, bonus = 0, nextRow = 30, shake = 0, last = 0
+let best = +(store.get('sc-tide-best') || 0)
+
+const swellAt = (x, z, time) =>
+  0.55 * Math.sin(z * 0.2 + time * 1.3) + 0.3 * Math.sin(x * 0.45 + z * 0.12 + time * 0.9) + 0.14 * Math.sin((x + z) * 0.8 + time * 2.1)
+
+function updateOcean(time) {
+  const pos = ocean.geometry.attributes.position
+  const a = pos.array
+  const scroll = dist
+  for (let i = 0; i < a.length; i += 3) {
+    const x = oceanBase[i], z = oceanBase[i + 2]
+    a[i + 1] = swellAt(x, z - scroll, time)
+  }
+  pos.needsUpdate = true
+  ocean.geometry.computeVertexNormals()
+}
+
+// ---------- Obstacles
+function makeObstacle(kind, laneIndex, z, extra = {}) {
+  let mesh
+  if (kind === 'rock') {
+    mesh = new THREE.Group()
+    const big = new THREE.Mesh(new THREE.DodecahedronGeometry(0.95, 0), mats.rock)
+    big.scale.set(1, 1.35, 1); big.position.y = 0.55; big.rotation.set(Math.random(), Math.random(), 0)
+    const small = new THREE.Mesh(new THREE.DodecahedronGeometry(0.5, 0), mats.rock)
+    small.position.set(0.55, 0.2, 0.3)
+    mesh.add(big, small)
+  } else if (kind === 'buoy') {
+    mesh = new THREE.Group()
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.5, 0.9, 10), mats.buoyRed); body.position.y = 0.45
+    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.41, 0.41, 0.2, 10), mats.buoyWhite); band.position.y = 0.55
+    const top = new THREE.Mesh(new THREE.SphereGeometry(0.18, 10, 8), mats.buoyWhite); top.position.y = 1.05
+    mesh.add(body, band, top)
+  } else if (kind === 'log') {
+    mesh = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, extra.width || 2, 8), mats.log)
+    mesh.rotation.z = Math.PI / 2
+  } else if (kind === 'ramp') {
+    const shape = new THREE.Shape()
+    shape.moveTo(0, 0); shape.lineTo(2.6, 0); shape.lineTo(2.6, 0.9); shape.lineTo(0, 0)
+    const g = new THREE.ExtrudeGeometry(shape, {depth: 1.7, bevelEnabled: false})
+    g.rotateY(Math.PI / 2); g.translate(-0.85, 0, 1.3)
+    mesh = new THREE.Mesh(g, mats.ramp)
+  } else if (kind === 'shell') {
+    mesh = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.42, 7), mats.shell)
+    mesh.rotation.x = Math.PI
+  }
+  const x = extra.x ?? LANES[laneIndex]
+  mesh.position.set(x, 0, z)
+  scene.add(mesh)
+  obstacles.push({kind, lane: laneIndex, z, x, y: extra.y ?? 0, mesh, width: extra.width || 0, taken: false, spin: Math.random() * 6})
+}
+
+// One row of the course. There is always a way through.
+function spawnRow(z) {
+  const level = Math.min(1, t / 80)
+  const roll = Math.random()
+  if (roll < 0.12 + level * 0.06) {
+    // Driftwood across every lane: jump it
+    makeObstacle('log', -1, z, {x: 0, width: 7.2})
+    for (const l of [0, 1, 2]) if (Math.random() < 0.4) makeObstacle('shell', l, z - 2.5, {y: 1.6})
+    return 16
+  }
+  if (roll < 0.24) {
+    // A ramp with shells in the air after it
+    const l = Math.floor(Math.random() * 3)
+    makeObstacle('ramp', l, z)
+    for (let k = 1; k <= 5; k++) makeObstacle('shell', l, z - 2 - k * 2.2, {y: 1.6 + Math.sin(k / 6 * Math.PI) * 2.6})
+    const other = [0, 1, 2].filter(x => x !== l)
+    if (Math.random() < 0.5 + level * 0.3) makeObstacle(Math.random() < 0.5 ? 'rock' : 'buoy', other[Math.floor(Math.random() * 2)], z)
+    return 22
+  }
+  // Block one or two lanes, leave a gap with shells
+  const blocked = Math.random() < 0.35 + level * 0.4 ? 2 : 1
+  const lanes = [0, 1, 2].sort(() => Math.random() - 0.5)
+  for (let i = 0; i < blocked; i++) makeObstacle(Math.random() < 0.6 ? 'rock' : 'buoy', lanes[i], z)
+  for (let i = blocked; i < 3; i++) if (Math.random() < 0.55) for (let k = 0; k < 3; k++) makeObstacle('shell', lanes[i], z - k * 2, {y: 0.7})
+  return 13 - level * 3
+}
+
+// ---------- Run control
+function reset() {
+  for (const o of obstacles) scene.remove(o.mesh)
+  obstacles = []
+  t = 0; dist = 0; speed = 16; lane = 1; px = 0; py = 0; vy = 0; trick = -1; trickDone = 0
+  shells = 0; bonus = 0; nextRow = 0; shake = 0
+  // Start with the course already in sight
+  let z = -40
+  while (z > -110) z -= spawnRow(z)
+  nextRow = -110 - z   // the next row appears at the horizon when it would have arrived there
+  for (const s of spray) { s.life = 0; s.m.visible = false }
+}
+const score = () => Math.floor(dist * 0.5) + shells * 10 + bonus
+
+function start() {
+  if (!ready) return
+  reset(); state = 'run'; $('tOverlay').classList.add('hidden')
+  last = performance.now(); buzz(10); requestAnimationFrame(loop)
+}
+function pause() {
+  if (state !== 'run') return
+  state = 'paused'
+  overlay(T('暂停了', 'Paused'), T('准备好了就继续。', 'Carry on when you’re ready.'), null, T('继续', 'Resume'))
+}
+function resume() { state = 'run'; $('tOverlay').classList.add('hidden'); last = performance.now(); requestAnimationFrame(loop) }
+function crash() {
+  state = 'over'; shake = 0.6; buzz([40, 30, 80])
+  const s = score(), isBest = s > best
+  if (isBest) { best = s; store.set('sc-tide-best', String(s)) }
+  const end = performance.now() + 500
+  ;(function settle(now) { render(); if (now < end) requestAnimationFrame(settle) })(performance.now())
+  setTimeout(() => overlay(isBest ? T('新纪录！', 'New best!') : T('翻船了', 'Wiped out'),
+    T(`${Math.floor(dist * 0.5)} 米 · ${shells} 个贝壳` + (bonus ? ` · 动作 +${bonus}` : '') + (isBest ? '' : ` · 最高 ${best}`),
+      `${Math.floor(dist * 0.5)} m · ${shells} shells` + (bonus ? ` · tricks +${bonus}` : '') + (isBest ? '' : ` · best ${best}`)),
+    s, T('再来一次', 'Play again')), 520)
+}
+function overlay(title, text, big, button) {
+  const o = $('tOverlay')
+  o.querySelector('h2').textContent = title
+  $('tText').textContent = text
+  $('tScore').hidden = big == null
+  if (big != null) $('tScore').textContent = big
+  $('tPlay').textContent = button
+  o.classList.remove('hidden')
+}
+$('tPlay').addEventListener('click', e => { e.stopPropagation(); if (!ready) { init(); return } state === 'paused' ? resume() : start() })
+
+let trickTimer
+function showTrick(text) {
+  const el = $('tTrick')
+  el.textContent = text; el.classList.add('on')
+  clearTimeout(trickTimer); trickTimer = setTimeout(() => el.classList.remove('on'), 800)
+}
+
+// ---------- Input: swipe or tap sides; arrow keys / WASD / space
+function move(dir) {
+  const next = Math.max(0, Math.min(2, lane + dir))
+  if (next !== lane) { lane = next; buzz(6) }
+}
+function jump() {
+  if (py <= 0.02 && !onRamp) { vy = 9.5; buzz(8) }
+  else if (py > 0.6 && trick < 0) { trick = 0; buzz(6) }   // in the air: trick
+}
+let touch = null
+const cardEl = $('tideCard')
+cardEl.addEventListener('pointerdown', e => {
+  if (state !== 'run') return
+  touch = {x: e.clientX, y: e.clientY, time: performance.now()}
+})
+cardEl.addEventListener('pointerup', e => {
+  if (state !== 'run' || !touch) return
+  const dx = e.clientX - touch.x, dy = e.clientY - touch.y
+  touch = null
+  if (Math.abs(dx) > 28 && Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 1 : -1)
+  else if (dy < -28) jump()
+  else {
+    const r = cardEl.getBoundingClientRect()
+    move(e.clientX - r.left < r.width / 2 ? -1 : 1)
+  }
+})
+cardEl.style.touchAction = 'none'
+window.addEventListener('keydown', e => {
+  if (!gameVisible()) return
+  const k = e.code
+  if (state !== 'run') {
+    if ((k === 'Space' || k === 'Enter') && !e.repeat) { e.preventDefault(); $('tPlay').click() }
+    return
+  }
+  if (k === 'ArrowLeft' || k === 'KeyA') { e.preventDefault(); move(-1) }
+  else if (k === 'ArrowRight' || k === 'KeyD') { e.preventDefault(); move(1) }
+  else if ((k === 'ArrowUp' || k === 'KeyW' || k === 'Space') && !e.repeat) { e.preventDefault(); jump() }
+})
+
+// ---------- Simulation
+function step(dt) {
+  t += dt
+  speed = Math.min(40, 16 + t * 0.32)
+  const dz = speed * dt
+  dist += dz
+
+  // Lane change: slide sideways with a lean
+  const target = LANES[lane]
+  const before = px
+  px += (target - px) * Math.min(1, dt * 12)
+  const lean = (px - before) / Math.max(dt, 1e-3)
+
+  // Vertical: ride the swell, or fly
+  const water = swellAt(px, 0 - dist, t)
+  vy -= 26 * dt
+  py += vy * dt
+  if (py <= 0) {
+    if (vy < -6) splash(10)
+    if (trick >= 0) {
+      if (trickDone >= 1) { bonus += 50; showTrick(T('漂亮！+50', 'Nice! +50')); buzz([12, 30, 12]) }
+      else showTrick(T('差一点', 'Almost'))
+    }
+    py = 0; vy = 0; trick = -1; trickDone = 0
+  }
+  if (trick >= 0) { trick += dt; trickDone = Math.min(1, trick / 0.65) }
+
+  player.position.set(px, water + py + 0.08, 0)
+  player.rotation.z = -lean * 0.035
+  player.rotation.x = py > 0 ? -0.15 : Math.sin(t * 3) * 0.04
+  rider.rotation.x = trick >= 0 ? trickDone * Math.PI * 2 : 0
+  rider.position.y = 0.05 - (py <= 0 ? Math.abs(Math.sin(t * 6)) * 0.03 : 0)
+
+  // Course
+  nextRow -= dz
+  if (nextRow <= 0) nextRow = spawnRow(-110)
+  onRamp = false
+  for (const o of obstacles) {
+    o.z += dz
+    const wy = swellAt(o.x, o.z - dist, t)
+    o.mesh.position.z = o.z
+    if (o.kind === 'shell') { o.spin += dt * 3; o.mesh.rotation.y = o.spin; o.mesh.position.y = wy + o.y + Math.sin(o.spin) * 0.1 }
+    else if (o.kind === 'buoy') { o.mesh.position.y = wy - 0.15; o.mesh.rotation.z = Math.sin(t * 2 + o.z) * 0.12 }
+    else if (o.kind === 'log') { o.mesh.position.y = wy + 0.15; o.mesh.rotation.x = Math.sin(t * 2) * 0.05 }
+    else o.mesh.position.y = wy - (o.kind === 'rock' ? 0.25 : 0.05)
+
+    const sameLane = o.lane === -1 || Math.abs(o.x - px) < 1.05
+    if (!sameLane || o.taken) continue
+    const near = Math.abs(o.z) < (o.kind === 'ramp' ? 1.5 : 0.75)
+    if (!near) continue
+    if (o.kind === 'shell') {
+      if (Math.abs(py + 0.7 - o.y) < 1.1) { o.taken = true; o.mesh.visible = false; shells++; buzz(4); splash(4, true) }
+    } else if (o.kind === 'ramp') {
+      if (py < 0.3) { onRamp = true; if (o.z > 0.3) { vy = 13.5; py = 0.35; o.taken = true; buzz(10); splash(8) } }
+    } else if (o.kind === 'log') {
+      if (py < 0.55) return crash()
+    } else if (o.kind === 'buoy') {
+      if (py < 1.1) return crash()
+    } else if (o.kind === 'rock') {
+      if (py < 1.7) return crash()
+    }
+  }
+  for (const o of obstacles) if (o.z > 10) scene.remove(o.mesh)
+  obstacles = obstacles.filter(o => o.z <= 10)
+
+  // Spray behind the board
+  if (py <= 0.05) emit(px, water + 0.1, 0.9, 2)
+  for (const s of spray) {
+    if (s.life <= 0) continue
+    s.life -= dt
+    s.m.position.addScaledVector(s.v, dt)
+    s.v.y -= 9 * dt
+    s.m.position.z += dz * 0.3
+    s.m.visible = s.life > 0
+  }
+  for (const d of dashes) { d.position.z += dz; if (d.position.z > 8) d.position.z -= 130; d.position.y = swellAt(d.position.x, d.position.z - dist, t) + 0.03 }
+  for (const c of clouds) { c.position.x += c.userData.drift * dt; if (c.position.x > 70) c.position.x = -70 }
+}
+
+function emit(x, y, z, n) {
+  for (let i = 0; i < n; i++) {
+    const s = spray.find(p => p.life <= 0)
+    if (!s) return
+    s.life = 0.5 + Math.random() * 0.3
+    s.m.position.set(x + (Math.random() - 0.5) * 0.5, y, z)
+    s.v.set((Math.random() - 0.5) * 3, 1.5 + Math.random() * 2.5, 2 + Math.random() * 2)
+    s.m.visible = true
+  }
+}
+function splash(n) { emit(px, player.position.y, 0.2, n) }
+
+// ---------- Camera and rendering
+function render() {
+  if (!renderer) return
+  const time = t || performance.now() / 1000
+  updateOcean(time)
+  const bob = Math.sin(time * 1.3) * 0.08
+  camera.position.set(px * 0.55, 4.0 + py * 0.35 + bob, 7.2)
+  if (shake > 0 && !reduceMotion) { camera.position.x += (Math.random() - 0.5) * shake; camera.position.y += (Math.random() - 0.5) * shake; shake *= 0.88 }
+  camera.lookAt(px * 0.35, 0.9 + py * 0.25, -7)
+  renderer.render(scene, camera)
+}
+
+let lastHud = ''
+function hud() {
+  const key = `${Math.floor(dist * 0.5)}|${shells}|${score()}|${best}`
+  if (key === lastHud) return
+  lastHud = key
+  $('tDist').textContent = `${Math.floor(dist * 0.5)} ${T('米', 'm')}`
+  $('tShells').textContent = `🐚 ${shells}`
+  $('tBest').textContent = state === 'run' || state === 'paused'
+    ? `${T('得分', 'Score')} ${score()}` + (best ? ` · ${T('最高', 'Best')} ${best}` : '')
+    : (best ? `${T('最高', 'Best')} ${best}` : '')
+}
+
+function loop(now) {
+  if (state !== 'run') return
+  const dt = Math.min(0.033, (now - last) / 1000); last = now
+  step(dt)
+  render(); hud()
+  if (state === 'run') requestAnimationFrame(loop)
+}
+
+// The start screen: surfer bobbing on the swell, only while the game is on screen
+let idling = false
+function idle() {
+  if (idling) return
+  idling = true
+  ;(function frame() {
+    if (state !== 'ready' || !gameVisible() || !ready) { idling = false; return }
+    const time = performance.now() / 1000
+    dist += 0.05
+    const water = swellAt(0, -dist, time)
+    player.position.set(0, water + 0.08, 0)
+    player.rotation.x = Math.sin(time * 3) * 0.05
+    for (const d of dashes) { d.position.z += 0.05; if (d.position.z > 8) d.position.z -= 130; d.position.y = swellAt(d.position.x, d.position.z - dist, time) + 0.03 }
+    render()
+    requestAnimationFrame(frame)
+  })()
+}
+
+hud()
+if ($('gameView').classList.contains('on') && current === 'tide') init()
+</script>
+</body>
+</html>
