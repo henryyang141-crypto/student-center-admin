@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-19T21:50:45-05:00",
+  "updated": "2026-11-25T09:27:42-05:00",
   "specialDays": [
     {
       "date": "2026-11-03",
@@ -123,6 +123,26 @@
   ],
   "closures": [],
   "announcements": [
+    {
+      "id": "2026-11-25-pmxndu",
+      "date": "2026-11-25T09:27:25-05:00",
+      "level": "info",
+      "title": "No school on thanksgiving",
+      "titleZh": "感恩节停课",
+      "body": "Good morning\nPlease be advised that school will be closed on Thursday, November 26 and Friday November 27 in observance of Thanksgiving. Classes will resume on Monday November 30, 2026.\nHave a Happy Thanksgiving.\nLori Parvis\nParent Coordinator",
+      "bodyZh": "早上好\n请注意，学校将于11月26日（星期四）和11月27日（星期五）感恩节放假。课程将于2026年11月30日（星期一）恢复。\n祝你感恩节快乐。\n洛里·帕尔维斯\n家长协调员",
+      "expires": "2026-11-30"
+    },
+    {
+      "id": "2026-11-25-xvqf5c",
+      "date": "2026-11-25T09:25:47-05:00",
+      "level": "info",
+      "title": "no after school activities today, Wednesday 11/25",
+      "titleZh": "11月25日星期三 没有课后活动",
+      "body": "Good morning,\n• There will be no after school activities tomorrow, Wednesday 11/25\n• No PSAL practices or club meetings\n• After dismissal all students should safely travel home\nThank you,\nThemistoklis Bollanos\nAssistant Principal\nStudent Life & Safety",
+      "bodyZh": "早上好，\n• 今天（11月25日，星期三）没有课后活动。\n• 没有PSAL训练或社团会议。\n• 放学后，所有学生应安全回家。\n谢谢你，\n塞米斯托克利斯·博拉诺斯，学生生活与安全\n助理校长",
+      "expires": "2026-11-25"
+    },
     {
       "id": "2026-11-19-5tmmdq",
       "date": "2026-11-19T21:50:41-05:00",
